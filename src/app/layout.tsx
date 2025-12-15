@@ -5,6 +5,7 @@ import GlobalCTA from './components/GlobalCTA'
 import ConsentBanner from '@/app/components/ConsentBanner'
 import Header from '@/app/components/Header'
 import Footer from '@/app/components/Footer'
+import GoogleTag from '@/app/components/GoogleTag'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -86,6 +87,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Header />
           {children}
           <GlobalCTA />
+
+          {/* ✅ Google Ads Tag (lädt erst nach Consent) */}
+          <GoogleTag />
+
           <ConsentBanner />
           <Footer />
         </div>

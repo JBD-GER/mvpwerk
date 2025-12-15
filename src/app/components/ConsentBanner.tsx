@@ -42,26 +42,13 @@ export default function ConsentBanner() {
     }
   }, [])
 
-  // ✅ hard scroll lock (html + body)
+  // ESC schließt
   useEffect(() => {
     if (!open) return
-    const html = document.documentElement
-    const body = document.body
-
-    const prevHtmlOverflow = html.style.overflow
-    const prevBodyOverflow = body.style.overflow
-    const prevBodyPaddingRight = body.style.paddingRight
-
-    const scrollBarWidth = window.innerWidth - html.clientWidth
-    html.style.overflow = 'hidden'
-    body.style.overflow = 'hidden'
-    if (scrollBarWidth > 0) body.style.paddingRight = `${scrollBarWidth}px`
-
-    return () => {
-      html.style.overflow = prevHtmlOverflow
-      body.style.overflow = prevBodyOverflow
-      body.style.paddingRight = prevBodyPaddingRight
-    }
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
   const summary = useMemo(() => {
@@ -94,12 +81,22 @@ export default function ConsentBanner() {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-end justify-center p-4 sm:p-6">
-      {/* Backdrop */}
-      <button
-        aria-label="Schließen"
+    <div
+      className={[
+        'fixed inset-0 z-[80]',
+        'flex items-end justify-center p-4 sm:p-6',
+      ].join(' ')}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Cookie-Einwilligung"
+    >
+      {/* Backdrop (blockt Scroll/Touch ohne Body-Fixes) */}
+      <div
+        aria-hidden
         onClick={close}
-        className="absolute inset-0 bg-slate-900/20 backdrop-blur-[2px]"
+        onWheel={(e) => e.preventDefault()}
+        onTouchMove={(e) => e.preventDefault()}
+        className="absolute inset-0 bg-slate-900/20 backdrop-blur-[2px] [touch-action:none]"
       />
 
       {/* Slim banner */}
@@ -109,8 +106,6 @@ export default function ConsentBanner() {
             'relative overflow-hidden rounded-[1.6rem] border border-slate-900/10 bg-white/85',
             'shadow-[0_20px_70px_rgba(15,23,42,0.12)] backdrop-blur-xl',
           ].join(' ')}
-          role="dialog"
-          aria-modal="true"
         >
           {/* subtle sheen */}
           <div className="pointer-events-none absolute inset-0 opacity-50">
@@ -143,9 +138,20 @@ export default function ConsentBanner() {
               </div>
             </div>
 
-            {/* ✅ Buttons UNDER text (simple) */}
+            {/* Buttons under text — LINKS bündig */}
             {mode === 'banner' ? (
-              <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-start">
+                <button
+                  onClick={acceptAll}
+                  className={[
+                    'inline-flex h-11 w-full items-center justify-center rounded-2xl px-4 text-[12px] font-semibold transition sm:w-auto',
+                    'border border-slate-900/15 bg-white/85 text-slate-900 shadow-[0_18px_55px_rgba(15,23,42,0.12)] backdrop-blur',
+                    'hover:bg-white hover:translate-y-[-1px] focus:outline-none focus:ring-2 focus:ring-slate-900/10',
+                  ].join(' ')}
+                >
+                  Alle akzeptieren
+                </button>
+
                 <button
                   onClick={rejectAll}
                   className="inline-flex h-11 w-full items-center justify-center rounded-2xl border border-slate-900/10 bg-white/75 px-4 text-[12px] font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 sm:w-auto"
@@ -159,22 +165,10 @@ export default function ConsentBanner() {
                 >
                   Einstellungen
                 </button>
-
-                {/* ✅ NOT BLACK: glass primary */}
-                <button
-                  onClick={acceptAll}
-                  className={[
-                    'inline-flex h-11 w-full items-center justify-center rounded-2xl px-4 text-[12px] font-semibold transition sm:w-auto',
-                    'border border-slate-900/15 bg-white/85 text-slate-900 shadow-[0_18px_55px_rgba(15,23,42,0.12)] backdrop-blur',
-                    'hover:bg-white hover:translate-y-[-1px] focus:outline-none focus:ring-2 focus:ring-slate-900/10',
-                  ].join(' ')}
-                >
-                  Alle akzeptieren
-                </button>
               </div>
             ) : (
               <>
-                {/* Settings area (compact, not huge) */}
+                {/* Settings area (compact) */}
                 <div className="mt-4 grid gap-2 sm:grid-cols-3">
                   <ToggleRow title="Notwendig" description="Betrieb & Sicherheit." enabled locked />
                   <ToggleRow
@@ -191,14 +185,8 @@ export default function ConsentBanner() {
                   />
                 </div>
 
-                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-                  <button
-                    onClick={() => setMode('banner')}
-                    className="inline-flex h-11 w-full items-center justify-center rounded-2xl border border-slate-900/10 bg-white/75 px-4 text-[12px] font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 sm:w-auto"
-                  >
-                    Zurück
-                  </button>
-
+                {/* Buttons settings — LINKS bündig */}
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-start">
                   <button
                     onClick={saveSelection}
                     className={[
@@ -208,6 +196,13 @@ export default function ConsentBanner() {
                     ].join(' ')}
                   >
                     Auswahl speichern
+                  </button>
+
+                  <button
+                    onClick={() => setMode('banner')}
+                    className="inline-flex h-11 w-full items-center justify-center rounded-2xl border border-slate-900/10 bg-white/75 px-4 text-[12px] font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 sm:w-auto"
+                  >
+                    Zurück
                   </button>
                 </div>
               </>
