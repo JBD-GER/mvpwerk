@@ -22,6 +22,10 @@ const BRAND = {
   text: '#0b1220',
   muted: '#64748b',
   subtle: '#94a3b8',
+
+  pillBg: '#F1F5F9',
+  pillBorder: '#E2E8F0',
+  msgBg: '#F8FAFC',
 }
 
 const DEFAULT_SITE_URL = 'https://www.mvpwerk.de'
@@ -45,14 +49,17 @@ function normalizeSiteUrl(input?: string) {
   return url.replace(/\/+$/, '')
 }
 
+/** ---------------- Building blocks (table-first, client proof) ---------------- */
+
 function pill(text: string) {
   return `
   <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:separate;">
     <tr>
-      <td bgcolor="#F1F5F9" style="
-        background:#F1F5F9;background-image:linear-gradient(#F1F5F9,#F1F5F9);
-        border:1px solid #E2E8F0;border-radius:999px;
-        padding:6px 10px;
+      <td class="pill" bgcolor="${BRAND.pillBg}" style="
+        background:${BRAND.pillBg};
+        border:1px solid ${BRAND.pillBorder};
+        border-radius:999px;
+        padding:7px 12px;
         font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
         font-size:12px;line-height:1;color:#334155;font-weight:700;
       ">
@@ -64,7 +71,7 @@ function pill(text: string) {
 
 function divider(px = 22) {
   return `
-  <tr>
+  <tr class="hr">
     <td style="padding:0 ${px}px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
         <tr>
@@ -75,11 +82,39 @@ function divider(px = 22) {
   </tr>`
 }
 
+function h1(text: string, px = 22) {
+  return `
+  <tr>
+    <td class="px" style="padding:0 ${px}px 12px ${px}px;">
+      <div class="title" style="
+        font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+        font-size:22px;line-height:1.28;color:${BRAND.text};font-weight:900;
+      ">
+        ${text}
+      </div>
+    </td>
+  </tr>`
+}
+
+function p(text: string, px = 22) {
+  return `
+  <tr>
+    <td class="px" style="padding:0 ${px}px 12px ${px}px;">
+      <div class="muted" style="
+        font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+        font-size:14px;line-height:1.7;color:${BRAND.muted};
+      ">
+        ${text}
+      </div>
+    </td>
+  </tr>`
+}
+
 function sectionTitle(text: string, px = 22) {
   return `
   <tr>
-    <td style="padding:14px ${px}px 6px ${px}px;">
-      <div style="
+    <td class="px" style="padding:14px ${px}px 6px ${px}px;">
+      <div class="muted" style="
         font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
         font-size:12px;line-height:1.2;color:${BRAND.muted};font-weight:800;
         letter-spacing:.06em;text-transform:uppercase;
@@ -90,23 +125,24 @@ function sectionTitle(text: string, px = 22) {
   </tr>`
 }
 
+/** ✅ single-column rows (label above value) -> looks identical everywhere */
 function field(label: string, valueHtml: string, px = 22, withTopBorder = true) {
   return `
   <tr>
-    <td style="padding:0 ${px}px;">
+    <td class="px" style="padding:0 ${px}px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
         <tr>
-          <td style="padding:12px 0;${withTopBorder ? `border-top:1px solid ${BRAND.border};` : ''}">
-            <div style="
+          <td class="row" style="padding:12px 0;${withTopBorder ? `border-top:1px solid ${BRAND.border};` : ''}">
+            <div class="muted" style="
               font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
               font-size:11px;line-height:1.3;color:${BRAND.muted};font-weight:800;
               letter-spacing:.05em;text-transform:uppercase;margin:0 0 6px 0;
             ">
               ${escapeHtml(label)}
             </div>
-            <div style="
+            <div class="text" style="
               font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-              font-size:14px;line-height:1.6;color:${BRAND.text};font-weight:700;
+              font-size:14px;line-height:1.6;color:${BRAND.text};font-weight:750;
               word-break:break-word;
             ">
               ${valueHtml}
@@ -121,11 +157,11 @@ function field(label: string, valueHtml: string, px = 22, withTopBorder = true) 
 function messageBlock(messageHtml: string, px = 22) {
   return `
   <tr>
-    <td style="padding:0 ${px}px 16px ${px}px;">
+    <td class="px" style="padding:0 ${px}px 16px ${px}px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;">
         <tr>
-          <td bgcolor="#F8FAFC" style="
-            background:#F8FAFC;background-image:linear-gradient(#F8FAFC,#F8FAFC);
+          <td class="msgbox" bgcolor="${BRAND.msgBg}" style="
+            background:${BRAND.msgBg};
             border:1px solid ${BRAND.border};
             border-radius:12px;
             padding:12px 14px;
@@ -150,45 +186,73 @@ function baseWrap(preheader: string, title: string, contentRows: string, siteUrl
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width" />
-  <meta name="color-scheme" content="light" />
-  <meta name="supported-color-schemes" content="light" />
+  <!-- ✅ allow light + dark (don’t lock light) -->
+  <meta name="color-scheme" content="light dark" />
+  <meta name="supported-color-schemes" content="light dark" />
   <title>${escapeHtml(title)}</title>
+
   <style>
     @media only screen and (max-width: 680px) {
-      .container { width: 100% !important; }
+      .container { width: 100% !important; max-width: 100% !important; }
       .px { padding-left: 16px !important; padding-right: 16px !important; }
-      .h1 { font-size: 20px !important; line-height: 1.25 !important; }
-      .p  { font-size: 14px !important; line-height: 1.65 !important; }
+      .title { font-size: 20px !important; line-height: 1.25 !important; }
+      .muted, .text { font-size: 14px !important; line-height: 1.65 !important; }
+    }
+
+    /* ✅ dark mode (Apple Mail, Outlook, etc.) */
+    @media (prefers-color-scheme: dark) {
+      body, .bg { background:#0b1220 !important; }
+      .card { background:#0f172a !important; border-color: rgba(255,255,255,.14) !important; }
+      .title, .text { color:#f8fafc !important; }
+      .muted { color:#cbd5e1 !important; }
+      .subtle { color:#94a3b8 !important; }
+      .hr td { border-top-color: rgba(255,255,255,.14) !important; }
+      .row { border-top-color: rgba(255,255,255,.14) !important; }
+      .pill { background: rgba(255,255,255,.06) !important; border-color: rgba(255,255,255,.14) !important; color:#cbd5e1 !important; }
+      .msgbox { background: rgba(255,255,255,.06) !important; border-color: rgba(255,255,255,.14) !important; color:#f8fafc !important; }
+      a { color:#93c5fd !important; }
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background:${BRAND.bg};background-image:linear-gradient(${BRAND.bg},${BRAND.bg});
-  color:${BRAND.text};-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
+
+<body class="bg" style="margin:0;padding:0;background:${BRAND.bg};color:${BRAND.text};
+  -webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+  <!-- preheader -->
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;mso-hide:all;">
     ${escapeHtml(preheader)}
   </div>
 
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="${BRAND.bg}"
-    style="background:${BRAND.bg};background-image:linear-gradient(${BRAND.bg},${BRAND.bg});margin:0;padding:26px 0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="bg" bgcolor="${BRAND.bg}"
+    style="background:${BRAND.bg};margin:0;padding:26px 0;">
     <tr>
       <td align="center" style="padding:0 12px;">
 
-        <table role="presentation" width="${CONTAINER_W}" cellpadding="0" cellspacing="0" class="container" bgcolor="${BRAND.card}"
+        <!-- main card -->
+        <table role="presentation" width="${CONTAINER_W}" cellpadding="0" cellspacing="0"
+          class="container card" bgcolor="${BRAND.card}"
           style="width:${CONTAINER_W}px;max-width:${CONTAINER_W}px;margin:0 auto;background:${BRAND.card};
-          background-image:linear-gradient(${BRAND.card},${BRAND.card});
           border:1px solid ${BRAND.border};border-radius:18px;overflow:hidden;">
           <tr>
             <td style="height:4px;background:${BRAND.primary};font-size:0;line-height:0;">&nbsp;</td>
           </tr>
 
+          <!-- header -->
           <tr>
             <td class="px" style="padding:18px 22px 10px 22px;">
-              <img src="${logoUrl}" alt="${escapeHtml(BRAND.name)}" height="26"
-                style="display:block;height:26px;width:auto;border:0;outline:none;text-decoration:none;" />
-              <div style="margin-top:8px;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-                font-size:12px;line-height:1.4;color:${BRAND.muted};">
-                ${escapeHtml(BRAND.websiteTitle)}
-              </div>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="left" style="vertical-align:middle;">
+                    <img src="${logoUrl}" alt="${escapeHtml(BRAND.name)}" height="26"
+                      style="display:block;height:26px;width:auto;border:0;outline:none;text-decoration:none;" />
+                  </td>
+                  <td align="right" style="vertical-align:middle;">
+                    <div class="muted" style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+                      font-size:12px;line-height:1.4;color:${BRAND.muted};">
+                      ${escapeHtml(BRAND.websiteTitle)}
+                    </div>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
@@ -196,18 +260,19 @@ function baseWrap(preheader: string, title: string, contentRows: string, siteUrl
 
         </table>
 
+        <!-- footer -->
         <table role="presentation" width="${CONTAINER_W}" cellpadding="0" cellspacing="0" class="container"
           style="width:${CONTAINER_W}px;max-width:${CONTAINER_W}px;margin:14px auto 0;">
           <tr>
             <td align="center" style="padding:12px 10px;">
-              <p style="margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+              <p class="muted" style="margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
                 font-size:12px;line-height:1.6;color:${BRAND.muted};">
                 Fragen? Schreiben Sie uns an
                 <a href="mailto:${BRAND.supportEmail}" style="color:${BRAND.primary};text-decoration:underline;">
                   ${BRAND.supportEmail}
                 </a>
               </p>
-              <p style="margin:6px 0 0 0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+              <p class="subtle" style="margin:6px 0 0 0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
                 font-size:11px;line-height:1.6;color:${BRAND.subtle};">
                 ${escapeHtml(BRAND.legalNote)}
               </p>
@@ -236,18 +301,9 @@ export function renderMvpwerkContactCustomerMail(ctx: ContactCtx) {
       </td>
     </tr>
 
-    <tr>
-      <td class="px" style="padding:0 22px 14px 22px;">
-        <h1 class="h1" style="margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-          font-size:22px;line-height:1.28;color:${BRAND.text};font-weight:900;">
-          Danke für Ihre Anfrage, ${escapeHtml(ctx.firstName)}!
-        </h1>
-        <p class="p" style="margin:10px 0 0 0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-          font-size:14px;line-height:1.7;color:${BRAND.muted};">
-          Wir haben Ihre Anfrage erhalten und melden uns in der Regel am selben Tag zurück.
-        </p>
-      </td>
-    </tr>
+    ${h1(`Danke für Ihre Anfrage, ${escapeHtml(ctx.firstName)}!`)}
+
+    ${p('Wir haben Ihre Anfrage erhalten und melden uns in der Regel am selben Tag zurück.')}
 
     ${divider()}
     ${sectionTitle('Ihre Angaben')}
@@ -266,7 +322,7 @@ export function renderMvpwerkContactCustomerMail(ctx: ContactCtx) {
     )}
 
     ${
-      ctx.message
+      ctx.message?.trim()
         ? `
           ${divider()}
           ${sectionTitle('Ihre Nachricht')}
@@ -278,7 +334,7 @@ export function renderMvpwerkContactCustomerMail(ctx: ContactCtx) {
     ${divider()}
     <tr>
       <td class="px" style="padding:12px 22px 18px 22px;">
-        <div style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+        <div class="muted" style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
           font-size:12px;line-height:1.6;color:${BRAND.muted};">
           Tipp: Falls Sie noch Kontext ergänzen möchten, antworten Sie einfach auf diese E-Mail.
         </div>
@@ -302,16 +358,14 @@ export function renderMvpwerkContactInternalMail(ctx: ContactCtx) {
       </td>
     </tr>
 
+    ${h1('Neue Kontaktanfrage')}
+
     <tr>
-      <td class="px" style="padding:0 22px 10px 22px;">
-        <h1 class="h1" style="margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-          font-size:22px;line-height:1.28;color:${BRAND.text};font-weight:900;">
-          Neue Kontaktanfrage
-        </h1>
-        <p style="margin:10px 0 0 0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      <td class="px" style="padding:0 22px 12px 22px;">
+        <div class="muted" style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
           font-size:13px;line-height:1.7;color:${BRAND.muted};">
-          Quelle: <b style="color:${BRAND.text};">/kontakt</b> · ${escapeHtml(submittedAt)}
-        </p>
+          Quelle: <b class="text" style="color:${BRAND.text};">/kontakt</b> · ${escapeHtml(submittedAt)}
+        </div>
       </td>
     </tr>
 
@@ -334,15 +388,15 @@ export function renderMvpwerkContactInternalMail(ctx: ContactCtx) {
     ${divider()}
     ${sectionTitle('Nachricht')}
     ${
-      ctx.message
+      ctx.message?.trim()
         ? messageBlock(nl2br(ctx.message))
-        : messageBlock(`<span style="color:${BRAND.muted};">– (keine Nachricht angegeben)</span>`)
+        : messageBlock(`<span class="muted" style="color:${BRAND.muted};">– (keine Nachricht angegeben)</span>`)
     }
 
     ${divider()}
     <tr>
       <td class="px" style="padding:12px 22px 18px 22px;">
-        <div style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+        <div class="muted" style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
           font-size:12px;line-height:1.6;color:${BRAND.muted};">
           Hinweis: Reply-To ist auf den Kunden gesetzt – antworten Sie einfach direkt auf diese E-Mail.
         </div>

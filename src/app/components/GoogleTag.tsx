@@ -12,20 +12,24 @@ export default function GoogleTag() {
   useEffect(() => {
     const sync = () => {
       const c = readConsent()
-      // Google Ads = Marketing (wenn du es auch bei "analytics" laden willst, lass das || drin)
-      setEnabled(Boolean(c?.marketing || c?.analytics))
+      // ✅ Google Ads Tag nur laden, wenn Marketing erlaubt ist
+      setEnabled(Boolean(c?.marketing))
     }
 
     sync()
 
-    // in anderen Tabs: storage event
+    // andere Tabs
     window.addEventListener('storage', sync)
-    // im selben Tab: custom event (siehe Patch unten)
-    window.addEventListener('mvpwerk:consent-updated', sync as any)
+
+    // ✅ gleicher Tab (DEIN Event!)
+    const onChanged = () => sync()
+    window.addEventListener('mvpwerk:consent-changed', onChanged as any)
+    window.addEventListener('mvpwerk:consent-cleared', onChanged as any)
 
     return () => {
       window.removeEventListener('storage', sync)
-      window.removeEventListener('mvpwerk:consent-updated', sync as any)
+      window.removeEventListener('mvpwerk:consent-changed', onChanged as any)
+      window.removeEventListener('mvpwerk:consent-cleared', onChanged as any)
     }
   }, [])
 
