@@ -1,74 +1,66 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useLayoutEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 
 type NavItem = { href: string; label: string }
 
-export default function MobileNav({ nav }: { nav: NavItem[] }) {
+export default function MobileNav({ nav = [] }: { nav?: NavItem[] }) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
-  const items = useMemo(() => nav.filter(Boolean), [nav])
 
-  // Scroll-Position merken (für iOS Fixed-Lock)
+  const items = useMemo(
+    () =>
+      (nav ?? []).filter(
+        (i): i is NavItem =>
+          !!i && typeof i.href === 'string' && typeof i.label === 'string'
+      ),
+    [nav]
+  )
+
   const scrollYRef = useRef(0)
 
   function close() {
     setOpen(false)
   }
 
-  // ✅ Wichtig: erst entsperren, dann navigieren (verhindert „schwarzen Screen“/Bug-Layer)
   function go(href: string) {
+    // erst schließen => unlock => dann navigieren
     setOpen(false)
-    requestAnimationFrame(() => {
-      router.push(href)
-    })
+    requestAnimationFrame(() => router.push(href))
   }
 
-  // ESC schließen + robustes Scroll-Lock (inkl. iOS)
+  // ESC schließen
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
     window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  // ✅ Scroll-Lock NUR wenn open=true (damit kein Cleanup bei open=false scrollt!)
+  useLayoutEffect(() => {
+    if (!open) return
 
     const body = document.body
     const html = document.documentElement
 
-    if (open) {
-      scrollYRef.current = window.scrollY || 0
+    const scrollY = window.scrollY || 0
+    scrollYRef.current = scrollY
 
-      // html sperren
-      html.style.overflow = 'hidden'
+    html.style.overflow = 'hidden'
 
-      // iOS-sicher: body fixed
-      body.style.position = 'fixed'
-      body.style.top = `-${scrollYRef.current}px`
-      body.style.left = '0'
-      body.style.right = '0'
-      body.style.width = '100%'
-      body.style.overflow = 'hidden'
-      body.style.touchAction = 'none'
-    } else {
-      // Restore
-      html.style.overflow = ''
-
-      body.style.position = ''
-      body.style.top = ''
-      body.style.left = ''
-      body.style.right = ''
-      body.style.width = ''
-      body.style.overflow = ''
-      body.style.touchAction = ''
-
-      window.scrollTo(0, scrollYRef.current || 0)
-    }
+    // iOS-sicher: body fixed
+    body.style.position = 'fixed'
+    body.style.top = `-${scrollY}px`
+    body.style.left = '0'
+    body.style.right = '0'
+    body.style.width = '100%'
+    body.style.overflow = 'hidden'
+    body.style.touchAction = 'none'
 
     return () => {
-      window.removeEventListener('keydown', onKey)
-
-      // Cleanup (auch wenn unmount während open=true)
       html.style.overflow = ''
 
       body.style.position = ''
@@ -79,6 +71,7 @@ export default function MobileNav({ nav }: { nav: NavItem[] }) {
       body.style.overflow = ''
       body.style.touchAction = ''
 
+      // ✅ zurück an exakt die Stelle (ohne Jump nach oben)
       window.scrollTo(0, scrollYRef.current || 0)
     }
   }, [open])
@@ -97,22 +90,19 @@ export default function MobileNav({ nav }: { nav: NavItem[] }) {
         </svg>
       </button>
 
-      {/* Overlay (nur sichtbar wenn open) */}
+      {/* Overlay */}
       <div
-        className={[
-          'fixed inset-0 z-[90] transition',
-          open ? 'pointer-events-auto' : 'pointer-events-none',
-        ].join(' ')}
+        className={['fixed inset-0 z-[90] transition', open ? 'pointer-events-auto' : 'pointer-events-none'].join(' ')}
         aria-hidden={!open}
       >
-        {/* Backdrop — ✅ heller (nicht schwarz) + smooth */}
+        {/* Backdrop */}
         <button
           type="button"
           aria-label="Menü schließen"
           onClick={close}
           className={[
             'absolute inset-0 transition-opacity',
-            'bg-slate-900/20 backdrop-blur-[2px]', // <= hier: NICHT zu dunkel
+            'bg-slate-900/20 backdrop-blur-[2px]',
             open ? 'opacity-100' : 'opacity-0',
           ].join(' ')}
         />
@@ -129,15 +119,8 @@ export default function MobileNav({ nav }: { nav: NavItem[] }) {
             open ? 'translate-x-0' : 'translate-x-full',
           ].join(' ')}
         >
-          {/* Top (safe-area) */}
           <div className="flex items-center justify-between px-5 pb-3 pt-[calc(env(safe-area-inset-top)+14px)]">
-            {/* Logo: via router, damit erst entsperrt wird */}
-            <button
-              type="button"
-              onClick={() => go('/')}
-              className="inline-flex items-center gap-2"
-              aria-label="Zur Startseite"
-            >
+            <button type="button" onClick={() => go('/')} className="inline-flex items-center gap-2" aria-label="Zur Startseite">
               <Image
                 src="/logos/mvpwerk_logo_trans.png"
                 alt="MVPWERK"
@@ -160,12 +143,10 @@ export default function MobileNav({ nav }: { nav: NavItem[] }) {
             </button>
           </div>
 
-          {/* Divider */}
           <div className="px-5">
             <div className="h-px w-full bg-slate-900/10" />
           </div>
 
-          {/* Links (scrollbar innerhalb Drawer) */}
           <nav className="flex-1 overflow-y-auto overscroll-contain px-3 py-3">
             <div className="space-y-1">
               {items.map((item) => {
@@ -196,7 +177,6 @@ export default function MobileNav({ nav }: { nav: NavItem[] }) {
             </div>
           </nav>
 
-          {/* Bottom sticky CTA */}
           <div className="border-t border-slate-900/10 bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-4">
             <button
               type="button"
@@ -206,9 +186,7 @@ export default function MobileNav({ nav }: { nav: NavItem[] }) {
               Kontakt <span className="ml-2">→</span>
             </button>
 
-            <div className="mt-3 text-center text-[11px] text-slate-600">
-              Unverbindlich · Antwort meist am selben Tag
-            </div>
+            <div className="mt-3 text-center text-[11px] text-slate-600">Unverbindlich · Antwort meist am selben Tag</div>
           </div>
         </aside>
       </div>

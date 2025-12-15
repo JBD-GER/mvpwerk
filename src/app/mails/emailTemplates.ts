@@ -15,17 +15,11 @@ const BRAND = {
   supportEmail: 'info@mvpwerk.de',
   legalNote: '© MVPWERK • Made in Germany • DSGVO-konform',
 
-  primary: '#0F172A', // slate-900
-  bg: '#f6f9fc',
+  bg: '#ffffff',
   card: '#ffffff',
-  border: '#e6edf5',
-  text: '#0b1220',
-  muted: '#64748b',
-  subtle: '#94a3b8',
-
-  pillBg: '#F1F5F9',
-  pillBorder: '#E2E8F0',
-  msgBg: '#F8FAFC',
+  border: '#E5E7EB', // light border
+  text: '#0B1220', // near-black
+  muted: '#111827', // still dark (so it stays "black-ish")
 }
 
 const DEFAULT_SITE_URL = 'https://www.mvpwerk.de'
@@ -36,11 +30,9 @@ function escapeHtml(s: string) {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' } as Record<string, string>)[c]
   )
 }
-
 function nl2br(s: string) {
   return escapeHtml(s).replace(/\n/g, '<br/>')
 }
-
 function normalizeSiteUrl(input?: string) {
   let url = (input || '').trim()
   if (!url) url = DEFAULT_SITE_URL
@@ -49,29 +41,11 @@ function normalizeSiteUrl(input?: string) {
   return url.replace(/\/+$/, '')
 }
 
-/** ---------------- Building blocks (table-first, client proof) ---------------- */
-
-function pill(text: string) {
-  return `
-  <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:separate;">
-    <tr>
-      <td class="pill" bgcolor="${BRAND.pillBg}" style="
-        background:${BRAND.pillBg};
-        border:1px solid ${BRAND.pillBorder};
-        border-radius:999px;
-        padding:7px 12px;
-        font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-        font-size:12px;line-height:1;color:#334155;font-weight:700;
-      ">
-        ${escapeHtml(text)}
-      </td>
-    </tr>
-  </table>`
-}
+/** ---------- blocks ---------- */
 
 function divider(px = 22) {
   return `
-  <tr class="hr">
+  <tr>
     <td style="padding:0 ${px}px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
         <tr>
@@ -85,13 +59,11 @@ function divider(px = 22) {
 function h1(text: string, px = 22) {
   return `
   <tr>
-    <td class="px" style="padding:0 ${px}px 12px ${px}px;">
-      <div class="title" style="
+    <td class="px" style="padding:0 ${px}px 10px ${px}px;">
+      <div class="t" style="
         font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-        font-size:22px;line-height:1.28;color:${BRAND.text};font-weight:900;
-      ">
-        ${text}
-      </div>
+        font-size:22px;line-height:1.28;color:${BRAND.text};font-weight:800;
+      ">${text}</div>
     </td>
   </tr>`
 }
@@ -100,12 +72,10 @@ function p(text: string, px = 22) {
   return `
   <tr>
     <td class="px" style="padding:0 ${px}px 12px ${px}px;">
-      <div class="muted" style="
+      <div style="
         font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-        font-size:14px;line-height:1.7;color:${BRAND.muted};
-      ">
-        ${text}
-      </div>
+        font-size:14px;line-height:1.65;color:${BRAND.text};font-weight:500;
+      ">${text}</div>
     </td>
   </tr>`
 }
@@ -114,39 +84,34 @@ function sectionTitle(text: string, px = 22) {
   return `
   <tr>
     <td class="px" style="padding:14px ${px}px 6px ${px}px;">
-      <div class="muted" style="
+      <div style="
         font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-        font-size:12px;line-height:1.2;color:${BRAND.muted};font-weight:800;
+        font-size:12px;line-height:1.2;color:${BRAND.text};font-weight:800;
         letter-spacing:.06em;text-transform:uppercase;
-      ">
-        ${escapeHtml(text)}
-      </div>
+      ">${escapeHtml(text)}</div>
     </td>
   </tr>`
 }
 
-/** ✅ single-column rows (label above value) -> looks identical everywhere */
+/** ✅ label above value => always looks identical (mobile + desktop) */
 function field(label: string, valueHtml: string, px = 22, withTopBorder = true) {
   return `
   <tr>
     <td class="px" style="padding:0 ${px}px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
         <tr>
-          <td class="row" style="padding:12px 0;${withTopBorder ? `border-top:1px solid ${BRAND.border};` : ''}">
-            <div class="muted" style="
+          <td style="padding:12px 0;${withTopBorder ? `border-top:1px solid ${BRAND.border};` : ''}">
+            <div style="
               font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-              font-size:11px;line-height:1.3;color:${BRAND.muted};font-weight:800;
+              font-size:11px;line-height:1.3;color:${BRAND.text};font-weight:800;
               letter-spacing:.05em;text-transform:uppercase;margin:0 0 6px 0;
-            ">
-              ${escapeHtml(label)}
-            </div>
-            <div class="text" style="
+            ">${escapeHtml(label)}</div>
+
+            <div style="
               font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-              font-size:14px;line-height:1.6;color:${BRAND.text};font-weight:750;
+              font-size:14px;line-height:1.6;color:${BRAND.text};font-weight:600;
               word-break:break-word;
-            ">
-              ${valueHtml}
-            </div>
+            ">${valueHtml}</div>
           </td>
         </tr>
       </table>
@@ -154,28 +119,29 @@ function field(label: string, valueHtml: string, px = 22, withTopBorder = true) 
   </tr>`
 }
 
-function messageBlock(messageHtml: string, px = 22) {
+function messageBox(messageHtml: string, px = 22) {
+  // ✅ still WHITE; just a border so it’s readable
   return `
   <tr>
     <td class="px" style="padding:0 ${px}px 16px ${px}px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;">
         <tr>
-          <td class="msgbox" bgcolor="${BRAND.msgBg}" style="
-            background:${BRAND.msgBg};
+          <td bgcolor="#FFFFFF" style="
+            background:#FFFFFF;
             border:1px solid ${BRAND.border};
             border-radius:12px;
             padding:12px 14px;
             font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-            font-size:14px;line-height:1.75;color:${BRAND.text};
+            font-size:14px;line-height:1.7;color:${BRAND.text};
             word-break:break-word;
-          ">
-            ${messageHtml}
-          </td>
+          ">${messageHtml}</td>
         </tr>
       </table>
     </td>
   </tr>`
 }
+
+/** ---------- wrapper ---------- */
 
 function baseWrap(preheader: string, title: string, contentRows: string, siteUrl?: string) {
   const base = normalizeSiteUrl(siteUrl)
@@ -186,54 +152,66 @@ function baseWrap(preheader: string, title: string, contentRows: string, siteUrl
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width" />
-  <!-- ✅ allow light + dark (don’t lock light) -->
-  <meta name="color-scheme" content="light dark" />
-  <meta name="supported-color-schemes" content="light dark" />
+
+  <!-- ✅ FORCE LIGHT LOOK -->
+  <meta name="color-scheme" content="light" />
+  <meta name="supported-color-schemes" content="light" />
+
+  <!-- ✅ stop iOS from auto-blue links where possible -->
+  <meta name="format-detection" content="telephone=no,date=no,address=no,email=no,url=no" />
+
   <title>${escapeHtml(title)}</title>
 
   <style>
     @media only screen and (max-width: 680px) {
       .container { width: 100% !important; max-width: 100% !important; }
       .px { padding-left: 16px !important; padding-right: 16px !important; }
-      .title { font-size: 20px !important; line-height: 1.25 !important; }
-      .muted, .text { font-size: 14px !important; line-height: 1.65 !important; }
+      .t { font-size: 20px !important; line-height: 1.25 !important; }
     }
 
-    /* ✅ dark mode (Apple Mail, Outlook, etc.) */
+    /* ✅ keep links NOT blue */
+    a, a:visited { color: ${BRAND.text} !important; text-decoration: underline !important; }
+
+    /* ✅ Apple Mail / iOS auto-detected links */
+    a[x-apple-data-detectors],
+    .apple-link a,
+    #MessageViewBody a {
+      color: ${BRAND.text} !important;
+      text-decoration: underline !important;
+      font-size: inherit !important;
+      font-family: inherit !important;
+      font-weight: inherit !important;
+      line-height: inherit !important;
+    }
+
+    /* ✅ if client tries dark mode anyway: force white/bg + black text */
     @media (prefers-color-scheme: dark) {
-      body, .bg { background:#0b1220 !important; }
-      .card { background:#0f172a !important; border-color: rgba(255,255,255,.14) !important; }
-      .title, .text { color:#f8fafc !important; }
-      .muted { color:#cbd5e1 !important; }
-      .subtle { color:#94a3b8 !important; }
-      .hr td { border-top-color: rgba(255,255,255,.14) !important; }
-      .row { border-top-color: rgba(255,255,255,.14) !important; }
-      .pill { background: rgba(255,255,255,.06) !important; border-color: rgba(255,255,255,.14) !important; color:#cbd5e1 !important; }
-      .msgbox { background: rgba(255,255,255,.06) !important; border-color: rgba(255,255,255,.14) !important; color:#f8fafc !important; }
-      a { color:#93c5fd !important; }
+      body, table, td, div { background: #FFFFFF !important; color: ${BRAND.text} !important; }
+      .force-card { background:#FFFFFF !important; }
+      a, a:visited { color: ${BRAND.text} !important; }
     }
   </style>
 </head>
 
-<body class="bg" style="margin:0;padding:0;background:${BRAND.bg};color:${BRAND.text};
+<body style="margin:0;padding:0;background:${BRAND.bg};color:${BRAND.text};
   -webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
   <!-- preheader -->
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;mso-hide:all;">
     ${escapeHtml(preheader)}
   </div>
 
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="bg" bgcolor="${BRAND.bg}"
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="${BRAND.bg}"
     style="background:${BRAND.bg};margin:0;padding:26px 0;">
     <tr>
       <td align="center" style="padding:0 12px;">
 
         <!-- main card -->
         <table role="presentation" width="${CONTAINER_W}" cellpadding="0" cellspacing="0"
-          class="container card" bgcolor="${BRAND.card}"
+          class="container force-card" bgcolor="${BRAND.card}"
           style="width:${CONTAINER_W}px;max-width:${CONTAINER_W}px;margin:0 auto;background:${BRAND.card};
           border:1px solid ${BRAND.border};border-radius:18px;overflow:hidden;">
           <tr>
-            <td style="height:4px;background:${BRAND.primary};font-size:0;line-height:0;">&nbsp;</td>
+            <td style="height:3px;background:${BRAND.text};font-size:0;line-height:0;">&nbsp;</td>
           </tr>
 
           <!-- header -->
@@ -246,8 +224,8 @@ function baseWrap(preheader: string, title: string, contentRows: string, siteUrl
                       style="display:block;height:26px;width:auto;border:0;outline:none;text-decoration:none;" />
                   </td>
                   <td align="right" style="vertical-align:middle;">
-                    <div class="muted" style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-                      font-size:12px;line-height:1.4;color:${BRAND.muted};">
+                    <div style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+                      font-size:12px;line-height:1.4;color:${BRAND.text};font-weight:700;">
                       ${escapeHtml(BRAND.websiteTitle)}
                     </div>
                   </td>
@@ -265,15 +243,15 @@ function baseWrap(preheader: string, title: string, contentRows: string, siteUrl
           style="width:${CONTAINER_W}px;max-width:${CONTAINER_W}px;margin:14px auto 0;">
           <tr>
             <td align="center" style="padding:12px 10px;">
-              <p class="muted" style="margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-                font-size:12px;line-height:1.6;color:${BRAND.muted};">
+              <p style="margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+                font-size:12px;line-height:1.6;color:${BRAND.text};font-weight:600;">
                 Fragen? Schreiben Sie uns an
-                <a href="mailto:${BRAND.supportEmail}" style="color:${BRAND.primary};text-decoration:underline;">
+                <a href="mailto:${BRAND.supportEmail}" style="color:${BRAND.text};text-decoration:underline;">
                   ${BRAND.supportEmail}
                 </a>
               </p>
-              <p class="subtle" style="margin:6px 0 0 0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-                font-size:11px;line-height:1.6;color:${BRAND.subtle};">
+              <p style="margin:6px 0 0 0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+                font-size:11px;line-height:1.6;color:${BRAND.text};">
                 ${escapeHtml(BRAND.legalNote)}
               </p>
             </td>
@@ -287,7 +265,7 @@ function baseWrap(preheader: string, title: string, contentRows: string, siteUrl
 </html>`
 }
 
-/** ---------------- Templates ---------------- */
+/** ---------- templates ---------- */
 
 export function renderMvpwerkContactCustomerMail(ctx: ContactCtx) {
   const pre = `Danke – wir haben Ihre Anfrage erhalten und melden uns in der Regel am selben Tag.`
@@ -295,14 +273,7 @@ export function renderMvpwerkContactCustomerMail(ctx: ContactCtx) {
   const fullName = `${ctx.firstName} ${ctx.lastName}`.trim()
 
   const rows = `
-    <tr>
-      <td class="px" style="padding:6px 22px 10px 22px;">
-        ${pill('Anfrage erhalten')}
-      </td>
-    </tr>
-
     ${h1(`Danke für Ihre Anfrage, ${escapeHtml(ctx.firstName)}!`)}
-
     ${p('Wir haben Ihre Anfrage erhalten und melden uns in der Regel am selben Tag zurück.')}
 
     ${divider()}
@@ -310,13 +281,13 @@ export function renderMvpwerkContactCustomerMail(ctx: ContactCtx) {
     ${field('Name', escapeHtml(fullName), 22, false)}
     ${field(
       'E-Mail',
-      `<a href="mailto:${escapeHtml(ctx.email)}" style="color:${BRAND.primary};text-decoration:underline;">${escapeHtml(
+      `<a href="mailto:${escapeHtml(ctx.email)}" style="color:${BRAND.text};text-decoration:underline;">${escapeHtml(
         ctx.email
       )}</a>`
     )}
     ${field(
       'Telefon',
-      `<a href="tel:${escapeHtml(ctx.phone)}" style="color:${BRAND.primary};text-decoration:underline;">${escapeHtml(
+      `<a href="tel:${escapeHtml(ctx.phone)}" style="color:${BRAND.text};text-decoration:underline;">${escapeHtml(
         ctx.phone
       )}</a>`
     )}
@@ -326,7 +297,7 @@ export function renderMvpwerkContactCustomerMail(ctx: ContactCtx) {
         ? `
           ${divider()}
           ${sectionTitle('Ihre Nachricht')}
-          ${messageBlock(nl2br(ctx.message))}
+          ${messageBox(nl2br(ctx.message))}
         `
         : ''
     }
@@ -334,8 +305,8 @@ export function renderMvpwerkContactCustomerMail(ctx: ContactCtx) {
     ${divider()}
     <tr>
       <td class="px" style="padding:12px 22px 18px 22px;">
-        <div class="muted" style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-          font-size:12px;line-height:1.6;color:${BRAND.muted};">
+        <div style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+          font-size:12px;line-height:1.6;color:${BRAND.text};font-weight:600;">
           Tipp: Falls Sie noch Kontext ergänzen möchten, antworten Sie einfach auf diese E-Mail.
         </div>
       </td>
@@ -352,19 +323,13 @@ export function renderMvpwerkContactInternalMail(ctx: ContactCtx) {
   const submittedAt = new Date().toLocaleString('de-DE')
 
   const rows = `
-    <tr>
-      <td class="px" style="padding:6px 22px 10px 22px;">
-        ${pill('Neue Kontaktanfrage')}
-      </td>
-    </tr>
-
     ${h1('Neue Kontaktanfrage')}
 
     <tr>
       <td class="px" style="padding:0 22px 12px 22px;">
-        <div class="muted" style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-          font-size:13px;line-height:1.7;color:${BRAND.muted};">
-          Quelle: <b class="text" style="color:${BRAND.text};">/kontakt</b> · ${escapeHtml(submittedAt)}
+        <div style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+          font-size:13px;line-height:1.65;color:${BRAND.text};font-weight:600;">
+          Quelle: <b style="color:${BRAND.text};">/kontakt</b> · ${escapeHtml(submittedAt)}
         </div>
       </td>
     </tr>
@@ -374,13 +339,13 @@ export function renderMvpwerkContactInternalMail(ctx: ContactCtx) {
     ${field('Name', escapeHtml(fullName), 22, false)}
     ${field(
       'E-Mail',
-      `<a href="mailto:${escapeHtml(ctx.email)}" style="color:${BRAND.primary};text-decoration:underline;">${escapeHtml(
+      `<a href="mailto:${escapeHtml(ctx.email)}" style="color:${BRAND.text};text-decoration:underline;">${escapeHtml(
         ctx.email
       )}</a>`
     )}
     ${field(
       'Telefon',
-      `<a href="tel:${escapeHtml(ctx.phone)}" style="color:${BRAND.primary};text-decoration:underline;">${escapeHtml(
+      `<a href="tel:${escapeHtml(ctx.phone)}" style="color:${BRAND.text};text-decoration:underline;">${escapeHtml(
         ctx.phone
       )}</a>`
     )}
@@ -389,15 +354,15 @@ export function renderMvpwerkContactInternalMail(ctx: ContactCtx) {
     ${sectionTitle('Nachricht')}
     ${
       ctx.message?.trim()
-        ? messageBlock(nl2br(ctx.message))
-        : messageBlock(`<span class="muted" style="color:${BRAND.muted};">– (keine Nachricht angegeben)</span>`)
+        ? messageBox(nl2br(ctx.message))
+        : messageBox(`<span style="color:${BRAND.text};font-weight:600;">– (keine Nachricht angegeben)</span>`)
     }
 
     ${divider()}
     <tr>
       <td class="px" style="padding:12px 22px 18px 22px;">
-        <div class="muted" style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-          font-size:12px;line-height:1.6;color:${BRAND.muted};">
+        <div style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+          font-size:12px;line-height:1.6;color:${BRAND.text};font-weight:600;">
           Hinweis: Reply-To ist auf den Kunden gesetzt – antworten Sie einfach direkt auf diese E-Mail.
         </div>
       </td>
