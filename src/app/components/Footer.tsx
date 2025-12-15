@@ -56,12 +56,6 @@ export default function Footer() {
             <p className="mt-2 max-w-[560px] text-[13px] leading-relaxed text-slate-700">
               Cloudbasierte MVP Software, SaaS und Web Apps – sauber gebaut, schnell live, kampagnen-ready.
             </p>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              <FooterLink href="/kontakt">Projekt anfragen</FooterLink>
-              <FooterLink href="/leistungen">Leistungen</FooterLink>
-              <FooterLink href="/foerderung-checker">Förderung-Checker</FooterLink>
-            </div>
           </div>
 
           {/* Nav */}
@@ -89,8 +83,8 @@ export default function Footer() {
               <div className="mt-2 space-y-1 text-[12px] text-slate-700">
                 <div>
                   <span className="font-medium text-slate-900">E-Mail:</span>{' '}
-                  <a className="underline decoration-slate-900/20 underline-offset-2 hover:text-slate-900" href="mailto:kontakt@mvpwerk.de">
-                    kontakt@mvpwerk.de
+                  <a className="underline decoration-slate-900/20 underline-offset-2 hover:text-slate-900" href="mailto:info@mvpwerk.de">
+                    info@mvpwerk.de
                   </a>
                 </div>
                 <div>
