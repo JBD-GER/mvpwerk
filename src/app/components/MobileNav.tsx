@@ -1,22 +1,34 @@
-// src/app/components/MobileNav.tsx
 'use client'
 
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 type NavItem = { href: string; label: string }
 
 export default function MobileNav({ nav }: { nav: NavItem[] }) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
   const items = useMemo(() => nav.filter(Boolean), [nav])
 
-  // Scroll-Position merken (für iOS-Fix-Lock)
+  // Scroll-Position merken (für iOS Fixed-Lock)
   const scrollYRef = useRef(0)
 
-  // ESC schließen + Body/HTML scroll lock (robust, inkl. iOS)
+  function close() {
+    setOpen(false)
+  }
+
+  // ✅ Wichtig: erst entsperren, dann navigieren (verhindert „schwarzen Screen“/Bug-Layer)
+  function go(href: string) {
+    setOpen(false)
+    requestAnimationFrame(() => {
+      router.push(href)
+    })
+  }
+
+  // ESC schließen + robustes Scroll-Lock (inkl. iOS)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
     window.addEventListener('keydown', onKey)
@@ -25,26 +37,22 @@ export default function MobileNav({ nav }: { nav: NavItem[] }) {
     const html = document.documentElement
 
     if (open) {
-      // aktuelle Scrollposition merken
       scrollYRef.current = window.scrollY || 0
 
-      // html sperren (bei vielen Layouts scrollt html statt body)
+      // html sperren
       html.style.overflow = 'hidden'
-      html.style.height = '100%'
 
-      // iOS/Browser-safe: body auf fixed setzen
+      // iOS-sicher: body fixed
       body.style.position = 'fixed'
       body.style.top = `-${scrollYRef.current}px`
       body.style.left = '0'
       body.style.right = '0'
       body.style.width = '100%'
       body.style.overflow = 'hidden'
-      body.style.height = '100%'
       body.style.touchAction = 'none'
     } else {
       // Restore
       html.style.overflow = ''
-      html.style.height = ''
 
       body.style.position = ''
       body.style.top = ''
@@ -52,21 +60,16 @@ export default function MobileNav({ nav }: { nav: NavItem[] }) {
       body.style.right = ''
       body.style.width = ''
       body.style.overflow = ''
-      body.style.height = ''
       body.style.touchAction = ''
 
-      // Scrollposition wiederherstellen
-      if (scrollYRef.current) {
-        window.scrollTo(0, scrollYRef.current)
-      }
+      window.scrollTo(0, scrollYRef.current || 0)
     }
 
     return () => {
       window.removeEventListener('keydown', onKey)
 
-      // Cleanup (falls unmount bei open)
+      // Cleanup (auch wenn unmount während open=true)
       html.style.overflow = ''
-      html.style.height = ''
 
       body.style.position = ''
       body.style.top = ''
@@ -74,8 +77,9 @@ export default function MobileNav({ nav }: { nav: NavItem[] }) {
       body.style.right = ''
       body.style.width = ''
       body.style.overflow = ''
-      body.style.height = ''
       body.style.touchAction = ''
+
+      window.scrollTo(0, scrollYRef.current || 0)
     }
   }, [open])
 
@@ -93,20 +97,22 @@ export default function MobileNav({ nav }: { nav: NavItem[] }) {
         </svg>
       </button>
 
-      {/* Overlay */}
+      {/* Overlay (nur sichtbar wenn open) */}
       <div
         className={[
-          'fixed inset-0 z-[70] transition',
+          'fixed inset-0 z-[90] transition',
           open ? 'pointer-events-auto' : 'pointer-events-none',
         ].join(' ')}
         aria-hidden={!open}
       >
-        {/* Backdrop */}
+        {/* Backdrop — ✅ heller (nicht schwarz) + smooth */}
         <button
+          type="button"
           aria-label="Menü schließen"
-          onClick={() => setOpen(false)}
+          onClick={close}
           className={[
-            'absolute inset-0 bg-slate-900/35 backdrop-blur-sm transition-opacity',
+            'absolute inset-0 transition-opacity',
+            'bg-slate-900/20 backdrop-blur-[2px]', // <= hier: NICHT zu dunkel
             open ? 'opacity-100' : 'opacity-0',
           ].join(' ')}
         />
@@ -117,15 +123,21 @@ export default function MobileNav({ nav }: { nav: NavItem[] }) {
           aria-modal="true"
           className={[
             'absolute right-0 top-0 h-[100dvh] w-[86vw] max-w-[380px]',
-            'border-l border-slate-900/10 bg-white shadow-[0_40px_120px_rgba(15,23,42,0.25)]',
+            'border-l border-slate-900/10 bg-white shadow-[0_40px_120px_rgba(15,23,42,0.20)]',
             'transition-transform duration-300 ease-out',
-            'flex flex-col', // ✅ innen scrollbar möglich
+            'flex flex-col',
             open ? 'translate-x-0' : 'translate-x-full',
           ].join(' ')}
         >
           {/* Top (safe-area) */}
           <div className="flex items-center justify-between px-5 pb-3 pt-[calc(env(safe-area-inset-top)+14px)]">
-            <Link href="/" onClick={() => setOpen(false)} className="inline-flex items-center gap-2" aria-label="Zur Startseite">
+            {/* Logo: via router, damit erst entsperrt wird */}
+            <button
+              type="button"
+              onClick={() => go('/')}
+              className="inline-flex items-center gap-2"
+              aria-label="Zur Startseite"
+            >
               <Image
                 src="/logos/mvpwerk_logo_trans.png"
                 alt="MVPWERK"
@@ -134,11 +146,11 @@ export default function MobileNav({ nav }: { nav: NavItem[] }) {
                 className="h-6 w-auto"
                 priority
               />
-            </Link>
+            </button>
 
             <button
               type="button"
-              onClick={() => setOpen(false)}
+              onClick={close}
               className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-900/10 bg-white text-slate-900 shadow-sm transition hover:bg-white/95 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
               aria-label="Schließen"
             >
@@ -159,14 +171,14 @@ export default function MobileNav({ nav }: { nav: NavItem[] }) {
               {items.map((item) => {
                 const active = pathname === item.href
                 return (
-                  <Link
+                  <button
                     key={item.href}
-                    href={item.href}
-                    onClick={() => setOpen(false)}
+                    type="button"
+                    onClick={() => go(item.href)}
                     className={[
-                      'group flex items-center gap-3 rounded-2xl px-4 py-3 text-[15px] font-medium transition',
+                      'group flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-[15px] font-medium transition',
                       active
-                        ? 'bg-slate-900 text-white shadow-[0_14px_40px_rgba(15,23,42,0.20)]'
+                        ? 'bg-slate-900 text-white shadow-[0_14px_40px_rgba(15,23,42,0.16)]'
                         : 'text-slate-900 hover:bg-slate-900/5',
                     ].join(' ')}
                   >
@@ -178,7 +190,7 @@ export default function MobileNav({ nav }: { nav: NavItem[] }) {
                       aria-hidden
                     />
                     <span>{item.label}</span>
-                  </Link>
+                  </button>
                 )
               })}
             </div>
@@ -186,13 +198,13 @@ export default function MobileNav({ nav }: { nav: NavItem[] }) {
 
           {/* Bottom sticky CTA */}
           <div className="border-t border-slate-900/10 bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-4">
-            <Link
-              href="/kontakt"
-              onClick={() => setOpen(false)}
-              className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white shadow-[0_18px_55px_rgba(15,23,42,0.22)] transition hover:bg-slate-800"
+            <button
+              type="button"
+              onClick={() => go('/kontakt')}
+              className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white shadow-[0_18px_55px_rgba(15,23,42,0.18)] transition hover:bg-slate-800"
             >
               Kontakt <span className="ml-2">→</span>
-            </Link>
+            </button>
 
             <div className="mt-3 text-center text-[11px] text-slate-600">
               Unverbindlich · Antwort meist am selben Tag

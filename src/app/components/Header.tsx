@@ -1,4 +1,3 @@
-// src/app/components/Header.tsx
 import Image from 'next/image'
 import Link from 'next/link'
 import DesktopNav from './DesktopNav'
@@ -12,9 +11,8 @@ const NAV = [
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-50 bg-white">
-      {/* “Glass”-Bar, aber nicht grau-klotzig */}
-      <div className="border-b border-slate-900/10 bg-white/55 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl">
+      <div className="border-b border-slate-900/10 bg-white/55">
         <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between gap-3 px-4 sm:px-6">
           {/* LEFT: Logo */}
           <Link href="/" className="flex items-center gap-2">
@@ -28,7 +26,7 @@ export default function Header() {
             />
           </Link>
 
-          {/* CENTER: Desktop Nav (schicke Buttons) */}
+          {/* CENTER: Desktop Nav */}
           <div className="hidden md:flex">
             <DesktopNav nav={NAV} />
           </div>

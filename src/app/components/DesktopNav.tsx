@@ -1,4 +1,3 @@
-// src/app/components/DesktopNav.tsx
 'use client'
 
 import Link from 'next/link'
@@ -20,9 +19,7 @@ export default function DesktopNav({ nav }: { nav: NavItem[] }) {
             aria-current={active ? 'page' : undefined}
             className={[
               'rounded-full px-4 py-2 text-[13px] font-medium transition',
-              active
-                ? 'bg-slate-900 text-white shadow-sm'
-                : 'text-slate-700 hover:bg-white hover:text-slate-900',
+              active ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-700 hover:bg-white hover:text-slate-900',
             ].join(' ')}
           >
             {item.label}
