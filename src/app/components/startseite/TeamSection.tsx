@@ -121,7 +121,7 @@ export default function TeamSection() {
                       <div className="flex items-center justify-center rounded-2xl border border-slate-900/10 bg-white/90 p-2 shadow-sm sm:p-3">
                         <div className="relative h-[42px] w-full sm:h-[62px]">
                           <Image
-                            src="/bilder/TOP-experten_Siegel_2020.png"
+                            src="/bilder/TOP-Experten_Siegel_2020.png"
                             alt="TOP Experten Siegel 2020"
                             fill
                             sizes="(min-width: 640px) 180px, 33vw"
@@ -135,7 +135,7 @@ export default function TeamSection() {
                       <div className="flex items-center justify-center rounded-2xl border border-slate-900/10 bg-white/90 p-2 shadow-sm sm:p-3">
                         <div className="relative h-[42px] w-full sm:h-[62px]">
                           <Image
-                            src="/bilder/TOP-experten_Siegel_2021.png"
+                            src="/bilder/TOP-Experten_Siegel_2021.png"
                             alt="TOP Experten Siegel 2021"
                             fill
                             sizes="(min-width: 640px) 180px, 33vw"
