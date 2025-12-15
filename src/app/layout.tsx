@@ -85,6 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans bg-white text-slate-900">
         <div className="min-h-screen">
           <Header />
+          <div aria-hidden className="h-16" />
           {children}
           <GlobalCTA />
 
