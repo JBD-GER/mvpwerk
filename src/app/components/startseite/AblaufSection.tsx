@@ -44,9 +44,8 @@ function StepIcon({ n }: { n: number }) {
   )
 }
 
-export default function AblaufSection() {
+export default function AblaufSection({ lang }: { lang: Lang }) {
   const searchParams = useSearchParams()
-  const lang = ((searchParams?.get('lang') as Lang) || 'de') satisfies Lang
 
   const [tab, setTab] = useState<TabKey>('beratung')
 

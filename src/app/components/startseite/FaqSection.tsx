@@ -24,9 +24,8 @@ function Chevron({ open }: { open: boolean }) {
   )
 }
 
-export default function FaqSection() {
+export default function FaqSection({ lang }: { lang: Lang }) {
   const searchParams = useSearchParams()
-  const lang = ((searchParams?.get('lang') as Lang) || 'de') satisfies Lang
 
   const faqs = useMemo<Faq[]>(
     () => [

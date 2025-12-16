@@ -15,12 +15,11 @@ function Star({ className = 'h-4 w-4' }: { className?: string }) {
   )
 }
 
-export default function HeroSection() {
+export default function HeroSection({ lang }: { lang: Lang }) {
   const portalRef = useRef<HTMLDivElement | null>(null)
   const [runAnim, setRunAnim] = useState(false)
 
   const searchParams = useSearchParams()
-  const lang = ((searchParams?.get('lang') as Lang) || 'de') satisfies Lang
 
   const t = useMemo(() => {
     return {

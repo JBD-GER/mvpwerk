@@ -7,9 +7,8 @@ import { useSearchParams } from 'next/navigation'
 
 type Lang = 'de' | 'en'
 
-export default function FoerderungSection() {
+export default function FoerderungSection({ lang }: { lang: Lang }) {
   const searchParams = useSearchParams()
-  const lang = ((searchParams?.get('lang') as Lang) || 'de') satisfies Lang
 
   const t = useMemo(() => {
     return {

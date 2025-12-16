@@ -114,9 +114,8 @@ const SERVICES = [
   },
 ] as const
 
-export default function LeistungenSection() {
+export default function LeistungenSection({ lang }: { lang: Lang }) {
   const searchParams = useSearchParams()
-  const lang = ((searchParams?.get('lang') as Lang) || 'de') satisfies Lang
 
   const t = useMemo(() => {
     return {
