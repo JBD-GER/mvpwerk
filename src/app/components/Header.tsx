@@ -3,11 +3,9 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useMemo, useState } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 
 type Lang = 'de' | 'en'
-const LANG_COOKIE = 'mvpwerk_lang'
-const ONE_YEAR = 60 * 60 * 24 * 365
 
 function normalizeLang(v: string | null | undefined): Lang | null {
   if (!v) return null
@@ -15,24 +13,6 @@ function normalizeLang(v: string | null | undefined): Lang | null {
   if (s === 'de' || s.startsWith('de-')) return 'de'
   if (s === 'en' || s.startsWith('en-')) return 'en'
   return null
-}
-
-function readCookie(name: string): string | null {
-  if (typeof document === 'undefined') return null
-  const match = document.cookie.match(
-    new RegExp('(?:^|; )' + name.replace(/[$()*+./?[\\\]^{|}-]/g, '\\$&') + '=([^;]*)')
-  )
-  return match ? decodeURIComponent(match[1]) : null
-}
-
-function writeLangCookie(lang: Lang) {
-  if (typeof document === 'undefined') return
-  document.cookie = `${LANG_COOKIE}=${encodeURIComponent(lang)}; path=/; max-age=${ONE_YEAR}; samesite=lax`
-}
-
-function detectBrowserLang(): Lang {
-  if (typeof navigator === 'undefined') return 'de'
-  return normalizeLang(navigator.language) ?? 'de'
 }
 
 function Flag({ lang }: { lang: Lang }) {
@@ -65,28 +45,13 @@ function Flag({ lang }: { lang: Lang }) {
 
 export default function Header() {
   const pathname = usePathname()
-  const router = useRouter()
   const searchParams = useSearchParams()
 
   const [open, setOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
 
-  // ✅ Hydration-safe: initial immer 'de'
-  const [lang, setLang] = useState<Lang>('de')
-
-  const spKey = useMemo(() => searchParams?.toString() ?? '', [searchParams])
-
-  // ✅ NUR syncen (URL -> Cookie -> Browser). KEIN replace/refresh hier!
-  useEffect(() => {
-    const q = normalizeLang(searchParams?.get('lang'))
-    const c = normalizeLang(readCookie(LANG_COOKIE))
-    const desired = q ?? c ?? detectBrowserLang()
-
-    if (desired !== lang) setLang(desired)
-    writeLangCookie(desired)
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spKey])
+  // ✅ EINZIGE WAHRHEIT: URL
+  const lang: Lang = useMemo(() => normalizeLang(searchParams?.get('lang')) ?? 'de', [searchParams])
 
   const t = useMemo(() => {
     return lang === 'de'
@@ -95,12 +60,14 @@ export default function Header() {
           contact: 'Kontakt',
           language: 'Sprache',
           chooseLang: 'Sprache wählen',
+          menuOpen: 'Menü öffnen',
         }
       : {
           nav: { home: 'Home', services: 'Services', funding: 'Funding', faq: 'FAQ' },
           contact: 'Contact',
           language: 'Language',
           chooseLang: 'Choose language',
+          menuOpen: 'Open menu',
         }
   }, [lang])
 
@@ -114,48 +81,36 @@ export default function Header() {
     [t]
   )
 
-  // ✅ Quelle: URL-Lang, falls vorhanden (damit Links konsistent bleiben)
-  const effectiveLang: Lang = useMemo(() => {
-    return normalizeLang(searchParams?.get('lang')) ?? lang
-  }, [searchParams, lang])
-
   const hrefWithLang = (href: string) => {
-    const params = new URLSearchParams(spKey)
-    params.set('lang', effectiveLang)
+    const params = new URLSearchParams(searchParams?.toString() ?? '')
+    params.set('lang', lang)
     const qs = params.toString()
     return qs ? `${href}?${qs}` : href
   }
 
-  function applyLang(next: Lang) {
-    const currentQ = normalizeLang(searchParams?.get('lang'))
-
-    if (next === lang && currentQ === next) {
+  function switchLang(next: Lang) {
+    if (next === lang) {
       setLangOpen(false)
       setOpen(false)
       return
     }
 
-    setLang(next)
-    writeLangCookie(next)
-
-    const params = new URLSearchParams(spKey)
+    const params = new URLSearchParams(searchParams?.toString() ?? '')
     params.set('lang', next)
+    const qs = params.toString()
+    const url = qs ? `${pathname}?${qs}` : pathname
 
     setLangOpen(false)
     setOpen(false)
 
-    const url = `${pathname}?${params.toString()}`
-
-    // ✅ 1) URL ändern
-    router.replace(url, { scroll: false })
-    // ✅ 2) refresh garantiert danach (verhindert “erster Klick passiert nicht”)
-    queueMicrotask(() => router.refresh())
+    // ✅ “Refresh” der aktuellen Seite – 100% zuverlässig
+    window.location.assign(url)
   }
 
   useEffect(() => {
     setOpen(false)
     setLangOpen(false)
-  }, [pathname])
+  }, [pathname, lang])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -230,8 +185,8 @@ export default function Header() {
                   'focus:outline-none focus:ring-2 focus:ring-slate-900/10',
                 ].join(' ')}
               >
-                <Flag lang={effectiveLang} />
-                <span className="text-slate-800">{effectiveLang === 'de' ? 'DE' : 'EN'}</span>
+                <Flag lang={lang} />
+                <span className="text-slate-800">{lang === 'de' ? 'DE' : 'EN'}</span>
                 <svg
                   viewBox="0 0 24 24"
                   className={['h-4 w-4 text-slate-600 transition', langOpen ? 'rotate-180' : 'rotate-0'].join(' ')}
@@ -250,28 +205,28 @@ export default function Header() {
                 <div className="absolute right-0 mt-2 w-44 overflow-hidden rounded-2xl border border-slate-900/10 bg-white/80 shadow-[0_20px_70px_rgba(15,23,42,0.12)] backdrop-blur">
                   <button
                     type="button"
-                    onClick={() => applyLang('de')}
+                    onClick={() => switchLang('de')}
                     className={[
                       'flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition',
-                      effectiveLang === 'de' ? 'bg-slate-900 text-white' : 'text-slate-800 hover:bg-slate-900/5',
+                      lang === 'de' ? 'bg-slate-900 text-white' : 'text-slate-800 hover:bg-slate-900/5',
                     ].join(' ')}
                   >
                     <Flag lang="de" />
                     Deutsch
-                    {effectiveLang === 'de' ? <span className="ml-auto text-white/80">✓</span> : null}
+                    {lang === 'de' ? <span className="ml-auto text-white/80">✓</span> : null}
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => applyLang('en')}
+                    onClick={() => switchLang('en')}
                     className={[
                       'flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition',
-                      effectiveLang === 'en' ? 'bg-slate-900 text-white' : 'text-slate-800 hover:bg-slate-900/5',
+                      lang === 'en' ? 'bg-slate-900 text-white' : 'text-slate-800 hover:bg-slate-900/5',
                     ].join(' ')}
                   >
                     <Flag lang="en" />
                     English
-                    {effectiveLang === 'en' ? <span className="ml-auto text-white/80">✓</span> : null}
+                    {lang === 'en' ? <span className="ml-auto text-white/80">✓</span> : null}
                   </button>
                 </div>
               ) : null}
@@ -296,7 +251,7 @@ export default function Header() {
               type="button"
               className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-900/10 bg-white shadow-sm md:hidden"
               onClick={() => setOpen((v) => !v)}
-              aria-label="Menü öffnen"
+              aria-label={t.menuOpen}
               aria-expanded={open}
             >
               <div className="space-y-1.5">
@@ -346,10 +301,10 @@ export default function Header() {
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
-                        onClick={() => applyLang('de')}
+                        onClick={() => switchLang('de')}
                         className={[
                           'inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition',
-                          effectiveLang === 'de'
+                          lang === 'de'
                             ? 'bg-slate-900 text-white'
                             : 'border border-slate-900/10 bg-white/80 text-slate-900 hover:bg-white',
                         ].join(' ')}
@@ -358,10 +313,10 @@ export default function Header() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => applyLang('en')}
+                        onClick={() => switchLang('en')}
                         className={[
                           'inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition',
-                          effectiveLang === 'en'
+                          lang === 'en'
                             ? 'bg-slate-900 text-white'
                             : 'border border-slate-900/10 bg-white/80 text-slate-900 hover:bg-white',
                         ].join(' ')}
