@@ -15,8 +15,7 @@ import GoogleTag from '@/app/components/GoogleTag'
  * Damit Seiten wirklich pro Request anhand der SearchParams rendern
  * (und nicht statisch “festgebacken” sind).
  */
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+
 
 const inter = Inter({
   subsets: ['latin'],
