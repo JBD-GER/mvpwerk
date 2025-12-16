@@ -11,6 +11,7 @@ const NAV: NavItem[] = [
   { href: '/', label: 'Startseite' },
   { href: '/leistungen', label: 'Leistungen' },
   { href: '/foerderung-checker', label: 'Förderung' },
+    { href: '/faq', label: 'FAQ' },
 ]
 
 export default function Header() {

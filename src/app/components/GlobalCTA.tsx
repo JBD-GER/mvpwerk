@@ -30,7 +30,7 @@ export default function GlobalCTA() {
         <div className="absolute inset-0 mvpwerk-cta-bottom-grid" />
       </div>
 
-      <div className="relative mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 sm:py-12">
+      <div className="relative mx-auto w-full max-w-[1400px] px-4 py-10 sm:px-6 sm:py-12">
         <div className="relative overflow-hidden rounded-[2rem] border border-slate-900/10 bg-white/70 shadow-[0_28px_90px_rgba(15,23,42,0.14)] backdrop-blur-xl">
           {/* Sheen im Card */}
           <div className="pointer-events-none absolute inset-0 opacity-60">

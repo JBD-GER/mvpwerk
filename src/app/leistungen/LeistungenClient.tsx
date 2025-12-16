@@ -484,7 +484,7 @@ export default function LeistungenClient() {
                   ref={inputRef}
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="Suchen (z. B. Mail, SaaS, Next.js,...)"
+                  placeholder="Was suchen Sie? (z.B. Mail, KI,...)"
                   className="h-11 w-full rounded-2xl border border-slate-900/10 bg-white/80 px-4 text-[13px] text-slate-900 shadow-sm outline-none backdrop-blur focus:ring-2 focus:ring-slate-900/10"
                 />
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-400">

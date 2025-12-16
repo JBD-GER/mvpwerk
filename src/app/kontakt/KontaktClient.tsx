@@ -72,6 +72,12 @@ export default function KontaktClient() {
     }
   }
 
+  // ✅ iOS Zoom Fix: mindestens 16px auf Mobile, ab sm wieder kleiner
+  const inputBase =
+    'h-11 w-full rounded-2xl border border-slate-900/10 bg-white/80 px-4 text-[16px] sm:text-[13px] text-slate-900 shadow-sm outline-none backdrop-blur focus:ring-2 focus:ring-slate-900/10'
+  const textareaBase =
+    'w-full rounded-2xl border border-slate-900/10 bg-white/80 px-4 py-3 text-[16px] sm:text-[13px] text-slate-900 shadow-sm outline-none backdrop-blur focus:ring-2 focus:ring-slate-900/10'
+
   return (
     <div className="relative overflow-hidden rounded-[1.8rem] border border-slate-900/10 bg-white/70 p-5 shadow-[0_22px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-6">
       <div className="pointer-events-none absolute inset-0 opacity-55">
@@ -103,7 +109,7 @@ export default function KontaktClient() {
               <input
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-900/10 bg-white/80 px-3 py-2 text-[13px]"
+                className={inputBase}
               />
             </label>
           </div>
@@ -114,8 +120,9 @@ export default function KontaktClient() {
                 required
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="h-11 w-full rounded-2xl border border-slate-900/10 bg-white/80 px-4 text-[13px] text-slate-900 shadow-sm outline-none backdrop-blur focus:ring-2 focus:ring-slate-900/10"
+                className={inputBase}
                 placeholder="Max"
+                autoComplete="given-name"
               />
             </Field>
 
@@ -124,8 +131,9 @@ export default function KontaktClient() {
                 required
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="h-11 w-full rounded-2xl border border-slate-900/10 bg-white/80 px-4 text-[13px] text-slate-900 shadow-sm outline-none backdrop-blur focus:ring-2 focus:ring-slate-900/10"
+                className={inputBase}
                 placeholder="Mustermann"
+                autoComplete="family-name"
               />
             </Field>
           </div>
@@ -137,18 +145,23 @@ export default function KontaktClient() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-11 w-full rounded-2xl border border-slate-900/10 bg-white/80 px-4 text-[13px] text-slate-900 shadow-sm outline-none backdrop-blur focus:ring-2 focus:ring-slate-900/10"
+                className={inputBase}
                 placeholder="max@firma.de"
+                autoComplete="email"
+                inputMode="email"
               />
             </Field>
 
             <Field label="Telefon *">
               <input
                 required
+                type="tel"
+                inputMode="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="h-11 w-full rounded-2xl border border-slate-900/10 bg-white/80 px-4 text-[13px] text-slate-900 shadow-sm outline-none backdrop-blur focus:ring-2 focus:ring-slate-900/10"
+                className={inputBase}
                 placeholder="+49 ..."
+                autoComplete="tel"
               />
             </Field>
           </div>
@@ -158,7 +171,7 @@ export default function KontaktClient() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={4}
-              className="w-full rounded-2xl border border-slate-900/10 bg-white/80 px-4 py-3 text-[13px] text-slate-900 shadow-sm outline-none backdrop-blur focus:ring-2 focus:ring-slate-900/10"
+              className={textareaBase}
               placeholder="Worum geht’s? (1–2 Sätze reichen)"
             />
           </Field>
@@ -193,7 +206,9 @@ export default function KontaktClient() {
           </div>
 
           {status === 'error' ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-[12px] text-rose-900">{error}</div>
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-[12px] text-rose-900">
+              {error}
+            </div>
           ) : null}
 
           <button

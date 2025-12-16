@@ -140,7 +140,7 @@ export default function KontaktPage() {
       />
 
       {/* Header */}
-      <header className="relative mx-auto w-full max-w-[1120px] px-4 pt-8 sm:px-6 sm:pt-10">
+      <header className="relative mx-auto w-full max-w-[1400px] px-4 pt-8 sm:px-6 sm:pt-10">
         <div className="inline-flex items-center gap-2 rounded-full border border-slate-900/10 bg-white/70 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur">
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500/70" />
           Kontakt
@@ -174,7 +174,7 @@ export default function KontaktPage() {
       </header>
 
       {/* Content */}
-      <section className="relative mx-auto w-full max-w-[1120px] px-4 pb-14 pt-8 sm:px-6 sm:pb-16">
+      <section className="relative mx-auto w-full max-w-[1400px] px-4 pb-14 pt-8 sm:px-6 sm:pb-16">
         <div className="grid gap-5 lg:grid-cols-12 lg:items-stretch">
           {/* Left */}
           <div className="lg:col-span-5">

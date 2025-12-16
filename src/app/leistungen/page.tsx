@@ -161,7 +161,7 @@ export default function LeistungenPage() {
       />
 
       {/* Header */}
-      <header className="relative mx-auto w-full max-w-[1200px] px-4 pt-10 sm:px-6 sm:pt-12">
+      <header className="relative mx-auto w-full max-w-[1400px] px-4 pt-10 sm:px-6 sm:pt-12">
         <div className="inline-flex items-center gap-2 rounded-full border border-slate-900/10 bg-white/70 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur">
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500/70" />
           Leistungen · strukturiert nach Phasen
@@ -189,7 +189,7 @@ export default function LeistungenPage() {
       </header>
 
       {/* Overview Grid (aus deiner LeistungenSection) */}
-      <section className="relative mx-auto w-full max-w-[1200px] px-4 pt-10 sm:px-6">
+      <section className="relative mx-auto w-full max-w-[1400px] px-4 pt-10 sm:px-6">
         <Card className="p-5 sm:p-6">
           <div className="pointer-events-none absolute inset-0 opacity-60">
             <div className="mvpwerk-leist-overview-sheen absolute -left-1/2 top-0 h-full w-[200%]" />
@@ -278,7 +278,7 @@ export default function LeistungenPage() {
       </section>
 
       {/* Full Leistungen (dein Client) */}
-      <section className="relative mx-auto w-full max-w-[1200px] px-4 pb-16 pt-8 sm:px-6 sm:pb-20">
+      <section className="relative mx-auto w-full max-w-[1400px] px-4 pb-16 pt-8 sm:px-6 sm:pb-20">
         <LeistungenClient />
       </section>
 
