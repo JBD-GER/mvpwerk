@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useEffect, useMemo, useState } from 'react'
+import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 type Lang = 'de' | 'en'
@@ -19,7 +19,9 @@ function normalizeLang(v: string | null | undefined): Lang | null {
 
 function readCookie(name: string): string | null {
   if (typeof document === 'undefined') return null
-  const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/[$()*+./?[\\\]^{|}-]/g, '\\$&') + '=([^;]*)'))
+  const match = document.cookie.match(
+    new RegExp('(?:^|; )' + name.replace(/[$()*+./?[\\\]^{|}-]/g, '\\$&') + '=([^;]*)')
+  )
   return match ? decodeURIComponent(match[1]) : null
 }
 
@@ -68,48 +70,57 @@ export default function Header() {
 
   const [open, setOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
-  const [lang, setLang] = useState<Lang>('de')
 
-  // ✅ Resolve lang: query -> cookie -> browser; sync cookie + URL (once)
+  // ✅ initial: cookie -> browser (damit UI sofort korrekt ist)
+  const [lang, setLang] = useState<Lang>(() => {
+    const c = normalizeLang(readCookie(LANG_COOKIE))
+    return c ?? detectBrowserLang()
+  })
+
+  // für stabile deps
+  const spKey = useMemo(() => searchParams?.toString() ?? '', [searchParams])
+
+  const syncingRef = useRef(false)
+
+  // ✅ Resolve lang: query -> cookie -> browser; sync cookie + URL
   useEffect(() => {
+    if (syncingRef.current) return
+    syncingRef.current = true
+
     const q = normalizeLang(searchParams?.get('lang'))
     if (q) {
-      setLang(q)
+      // URL ist source of truth
+      if (q !== lang) setLang(q)
       writeLangCookie(q)
+      syncingRef.current = false
       return
     }
 
-    const c = normalizeLang(readCookie(LANG_COOKIE))
-    const detected = c ?? detectBrowserLang()
-    setLang(detected)
-    writeLangCookie(detected)
+    // kein lang in URL -> nutze state (cookie/browser) und schreibe einmal rein
+    writeLangCookie(lang)
 
-    const params = new URLSearchParams(searchParams?.toString() || '')
-    params.set('lang', detected)
-    router.replace(`${pathname}?${params.toString()}`)
+    const params = new URLSearchParams(spKey)
+    params.set('lang', lang)
+
+    startTransition(() => {
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+      router.refresh() // ✅ wichtig für Server-Content
+    })
+
+    syncingRef.current = false
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, router, searchParams])
+  }, [pathname, spKey]) // absichtlich NICHT lang als dep
 
   const t = useMemo(() => {
     return lang === 'de'
       ? {
-          nav: {
-            home: 'Startseite',
-            services: 'Leistungen',
-            funding: 'Förderung',
-            faq: 'FAQ',
-          },
+          nav: { home: 'Startseite', services: 'Leistungen', funding: 'Förderung', faq: 'FAQ' },
           contact: 'Kontakt',
           language: 'Sprache',
           chooseLang: 'Sprache wählen',
         }
       : {
-          nav: {
-            home: 'Home',
-            services: 'Services',
-            funding: 'Funding',
-            faq: 'FAQ',
-          },
+          nav: { home: 'Home', services: 'Services', funding: 'Funding', faq: 'FAQ' },
           contact: 'Contact',
           language: 'Language',
           chooseLang: 'Choose language',
@@ -127,19 +138,33 @@ export default function Header() {
   )
 
   const hrefWithLang = (href: string) => {
-    const params = new URLSearchParams(searchParams?.toString() || '')
+    const params = new URLSearchParams(spKey)
     params.set('lang', lang)
     const qs = params.toString()
     return qs ? `${href}?${qs}` : href
   }
 
   function applyLang(next: Lang) {
+    if (next === lang && normalizeLang(searchParams?.get('lang')) === next) {
+      setLangOpen(false)
+      setOpen(false)
+      return
+    }
+
     setLang(next)
     writeLangCookie(next)
-    const params = new URLSearchParams(searchParams?.toString() || '')
+
+    const params = new URLSearchParams(spKey)
     params.set('lang', next)
-    router.replace(`${pathname}?${params.toString()}`)
+
+    // ✅ Mobile: direkt alles schließen, sonst fühlt es sich "nicht übernommen" an
     setLangOpen(false)
+    setOpen(false)
+
+    startTransition(() => {
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+      router.refresh() // ✅ DAS ist der “1. Klick wirkt nicht”-Fix
+    })
   }
 
   useEffect(() => {
