@@ -2,6 +2,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 type FAQ = { q: string; a: string }
 

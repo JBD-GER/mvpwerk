@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 type Lang = 'de' | 'en'
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 type Tag =
   | 'Beratung'

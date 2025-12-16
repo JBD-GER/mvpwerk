@@ -94,20 +94,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="de" className={inter.variable}>
       <body className="bg-white font-sans text-slate-900">
-        {/* ✅ Alles, was useSearchParams nutzt, liegt innerhalb Suspense */}
-        <Suspense fallback={null}>
-          <div className="min-h-screen">
+        <div className="min-h-screen">
+          {/* ✅ Suspense nur um Header (useSearchParams) */}
+          <Suspense fallback={null}>
             <Header />
-            <div aria-hidden className="h-16" />
+          </Suspense>
 
-            {children}
+          <div aria-hidden className="h-16" />
 
-            <GlobalCTA />
-            <GoogleTag />
-            <ConsentBanner />
-            <Footer />
-          </div>
-        </Suspense>
+          {children}
+
+          <GlobalCTA />
+          <GoogleTag />
+          <ConsentBanner />
+          <Footer />
+        </div>
       </body>
     </html>
   )

@@ -6,6 +6,8 @@ import { useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 type Lang = 'de' | 'en'
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default function FoerderungSection({ lang }: { lang: Lang }) {
   const searchParams = useSearchParams()

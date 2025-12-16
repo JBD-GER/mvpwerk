@@ -4,6 +4,8 @@ import Link from 'next/link'
 import FAQClient from './FAQClient'
 
 type Lang = 'de' | 'en'
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 function normalizeLang(v: unknown): Lang | null {
   if (!v) return null

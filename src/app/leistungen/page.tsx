@@ -5,6 +5,8 @@ import Link from 'next/link'
 import LeistungenClient from './LeistungenClient'
 
 type Lang = 'de' | 'en'
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 function normalizeLang(v: unknown): Lang | null {
   if (!v) return null

@@ -6,6 +6,8 @@ import { useSearchParams } from 'next/navigation'
 
 type Lang = 'de' | 'en'
 type Faq = { q: string; a: string }
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 function Chevron({ open }: { open: boolean }) {
   return (

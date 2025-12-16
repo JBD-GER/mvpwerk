@@ -7,6 +7,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 
 type Status = 'idle' | 'loading' | 'success' | 'error'
 type Lang = 'de' | 'en'
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 const LANG_COOKIE = 'mvpwerk_lang'
 

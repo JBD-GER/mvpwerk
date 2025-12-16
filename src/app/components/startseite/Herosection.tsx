@@ -6,6 +6,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 type Lang = 'de' | 'en'
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 function Star({ className = 'h-4 w-4' }: { className?: string }) {
   return (

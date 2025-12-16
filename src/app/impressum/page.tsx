@@ -4,6 +4,10 @@ import Link from 'next/link'
 
 type Lang = 'de' | 'en'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+
 function normalizeLang(v: unknown): Lang | null {
   if (!v) return null
   const s = Array.isArray(v) ? String(v[0] ?? '') : String(v)

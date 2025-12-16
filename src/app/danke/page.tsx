@@ -6,6 +6,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 type Lang = 'de' | 'en'
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 const LANG_COOKIE = 'mvpwerk_lang'
 const ONE_YEAR = 60 * 60 * 24 * 365
 

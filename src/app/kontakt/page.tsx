@@ -7,6 +7,8 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mvpwerk.de'
 const TEAM_IMAGE = '/bilder/gruppenbild_mvpwerk.png'
 
 type Lang = 'de' | 'en'
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 function normalizeLang(v: unknown): Lang | null {
   if (!v) return null

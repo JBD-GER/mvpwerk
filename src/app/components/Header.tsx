@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { startTransition, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 type Lang = 'de' | 'en'
@@ -71,34 +71,22 @@ export default function Header() {
   const [open, setOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
 
-  // ✅ Hydration-safe initial state: NICHT Cookie/Browser!
-  // Server rendert immer stabil "de", Client hydratisiert identisch -> kein mismatch
+  // ✅ Hydration-safe: initial immer 'de'
   const [lang, setLang] = useState<Lang>('de')
 
   const spKey = useMemo(() => searchParams?.toString() ?? '', [searchParams])
 
-  // ✅ Nach dem Mount: URL -> Cookie -> Browser, und URL ggf. korrigieren + refresh für Server-Content
+  // ✅ NUR syncen (URL -> Cookie -> Browser). KEIN replace/refresh hier!
   useEffect(() => {
     const q = normalizeLang(searchParams?.get('lang'))
     const c = normalizeLang(readCookie(LANG_COOKIE))
     const desired = q ?? c ?? detectBrowserLang()
 
-    // state/cookie immer angleichen
     if (desired !== lang) setLang(desired)
     writeLangCookie(desired)
 
-    // wenn URL kein lang oder anderes lang: URL korrigieren + Server-Content neu laden
-    if (q !== desired) {
-      const params = new URLSearchParams(spKey)
-      params.set('lang', desired)
-
-      startTransition(() => {
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false })
-        router.refresh()
-      })
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, spKey]) // absichtlich ohne "lang" als dep (sonst unnötige Loops)
+  }, [spKey])
 
   const t = useMemo(() => {
     return lang === 'de'
@@ -126,15 +114,22 @@ export default function Header() {
     [t]
   )
 
+  // ✅ Quelle: URL-Lang, falls vorhanden (damit Links konsistent bleiben)
+  const effectiveLang: Lang = useMemo(() => {
+    return normalizeLang(searchParams?.get('lang')) ?? lang
+  }, [searchParams, lang])
+
   const hrefWithLang = (href: string) => {
     const params = new URLSearchParams(spKey)
-    params.set('lang', lang)
+    params.set('lang', effectiveLang)
     const qs = params.toString()
     return qs ? `${href}?${qs}` : href
   }
 
   function applyLang(next: Lang) {
-    if (next === lang && normalizeLang(searchParams?.get('lang')) === next) {
+    const currentQ = normalizeLang(searchParams?.get('lang'))
+
+    if (next === lang && currentQ === next) {
       setLangOpen(false)
       setOpen(false)
       return
@@ -149,10 +144,12 @@ export default function Header() {
     setLangOpen(false)
     setOpen(false)
 
-    startTransition(() => {
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false })
-      router.refresh() // ✅ wichtig: Server-Komponenten ziehen neuen lang
-    })
+    const url = `${pathname}?${params.toString()}`
+
+    // ✅ 1) URL ändern
+    router.replace(url, { scroll: false })
+    // ✅ 2) refresh garantiert danach (verhindert “erster Klick passiert nicht”)
+    queueMicrotask(() => router.refresh())
   }
 
   useEffect(() => {
@@ -233,8 +230,8 @@ export default function Header() {
                   'focus:outline-none focus:ring-2 focus:ring-slate-900/10',
                 ].join(' ')}
               >
-                <Flag lang={lang} />
-                <span className="text-slate-800">{lang === 'de' ? 'DE' : 'EN'}</span>
+                <Flag lang={effectiveLang} />
+                <span className="text-slate-800">{effectiveLang === 'de' ? 'DE' : 'EN'}</span>
                 <svg
                   viewBox="0 0 24 24"
                   className={['h-4 w-4 text-slate-600 transition', langOpen ? 'rotate-180' : 'rotate-0'].join(' ')}
@@ -256,12 +253,12 @@ export default function Header() {
                     onClick={() => applyLang('de')}
                     className={[
                       'flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition',
-                      lang === 'de' ? 'bg-slate-900 text-white' : 'text-slate-800 hover:bg-slate-900/5',
+                      effectiveLang === 'de' ? 'bg-slate-900 text-white' : 'text-slate-800 hover:bg-slate-900/5',
                     ].join(' ')}
                   >
                     <Flag lang="de" />
                     Deutsch
-                    {lang === 'de' ? <span className="ml-auto text-white/80">✓</span> : null}
+                    {effectiveLang === 'de' ? <span className="ml-auto text-white/80">✓</span> : null}
                   </button>
 
                   <button
@@ -269,12 +266,12 @@ export default function Header() {
                     onClick={() => applyLang('en')}
                     className={[
                       'flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition',
-                      lang === 'en' ? 'bg-slate-900 text-white' : 'text-slate-800 hover:bg-slate-900/5',
+                      effectiveLang === 'en' ? 'bg-slate-900 text-white' : 'text-slate-800 hover:bg-slate-900/5',
                     ].join(' ')}
                   >
                     <Flag lang="en" />
                     English
-                    {lang === 'en' ? <span className="ml-auto text-white/80">✓</span> : null}
+                    {effectiveLang === 'en' ? <span className="ml-auto text-white/80">✓</span> : null}
                   </button>
                 </div>
               ) : null}
@@ -352,7 +349,7 @@ export default function Header() {
                         onClick={() => applyLang('de')}
                         className={[
                           'inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition',
-                          lang === 'de'
+                          effectiveLang === 'de'
                             ? 'bg-slate-900 text-white'
                             : 'border border-slate-900/10 bg-white/80 text-slate-900 hover:bg-white',
                         ].join(' ')}
@@ -364,7 +361,7 @@ export default function Header() {
                         onClick={() => applyLang('en')}
                         className={[
                           'inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition',
-                          lang === 'en'
+                          effectiveLang === 'en'
                             ? 'bg-slate-900 text-white'
                             : 'border border-slate-900/10 bg-white/80 text-slate-900 hover:bg-white',
                         ].join(' ')}

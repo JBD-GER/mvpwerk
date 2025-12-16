@@ -5,6 +5,9 @@ import { useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type { FoerderProgramm } from './page'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 function Icon({ name }: { name: 'radar' | 'pin' | 'wallet' | 'spark' | 'shield' | 'rocket' | 'flame' | 'link' }) {
   const cls = 'h-[16px] w-[16px]'
   switch (name) {

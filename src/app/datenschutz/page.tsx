@@ -3,6 +3,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 type Lang = 'de' | 'en'
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 function normalizeLang(v: unknown): Lang | null {
   if (!v) return null
