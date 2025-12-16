@@ -85,24 +85,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="de" className={inter.variable}>
       <body className="bg-white font-sans text-slate-900">
-        <div className="min-h-screen">
-          {/* ✅ FIX: Header (oder ein Child davon) nutzt useSearchParams() → Suspense drum */}
-          <Suspense fallback={null}>
+        {/* ✅ FIX: Alles, was useSearchParams nutzt, liegt jetzt innerhalb Suspense */}
+        <Suspense fallback={null}>
+          <div className="min-h-screen">
             <Header />
-          </Suspense>
+            <div aria-hidden className="h-16" />
 
-          <div aria-hidden className="h-16" />
+            {children}
 
-          {children}
-
-          <GlobalCTA />
-
-          {/* ✅ Google Ads Tag (lädt erst nach Consent) */}
-          <GoogleTag />
-
-          <ConsentBanner />
-          <Footer />
-        </div>
+            <GlobalCTA />
+            <GoogleTag />
+            <ConsentBanner />
+            <Footer />
+          </div>
+        </Suspense>
       </body>
     </html>
   )
