@@ -1,4 +1,5 @@
 // src/app/mails/emailTemplates.ts
+export type Lang = 'de' | 'en'
 
 export type ContactCtx = {
   firstName: string
@@ -7,6 +8,7 @@ export type ContactCtx = {
   phone: string
   message?: string
   siteUrl?: string
+  lang?: Lang // ✅ neu
 }
 
 const BRAND = {
@@ -17,18 +19,16 @@ const BRAND = {
 
   bg: '#ffffff',
   card: '#ffffff',
-  border: '#E5E7EB', // light border
-  text: '#0B1220', // near-black
-  muted: '#111827', // still dark (so it stays "black-ish")
+  border: '#E5E7EB',
+  text: '#0B1220',
+  muted: '#111827',
 }
 
 const DEFAULT_SITE_URL = 'https://www.mvpwerk.de'
 const CONTAINER_W = 640
 
 function escapeHtml(s: string) {
-  return (s || '').replace(/[&<>"]/g, (c) =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' } as Record<string, string>)[c]
-  )
+  return (s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' } as any)[c])
 }
 function nl2br(s: string) {
   return escapeHtml(s).replace(/\n/g, '<br/>')
@@ -40,8 +40,6 @@ function normalizeSiteUrl(input?: string) {
   if (!/^https?:\/\//i.test(url)) url = `https://${url}`
   return url.replace(/\/+$/, '')
 }
-
-/** ---------- blocks ---------- */
 
 function divider(px = 22) {
   return `
@@ -93,7 +91,6 @@ function sectionTitle(text: string, px = 22) {
   </tr>`
 }
 
-/** ✅ label above value => always looks identical (mobile + desktop) */
 function field(label: string, valueHtml: string, px = 22, withTopBorder = true) {
   return `
   <tr>
@@ -120,7 +117,6 @@ function field(label: string, valueHtml: string, px = 22, withTopBorder = true) 
 }
 
 function messageBox(messageHtml: string, px = 22) {
-  // ✅ still WHITE; just a border so it’s readable
   return `
   <tr>
     <td class="px" style="padding:0 ${px}px 16px ${px}px;">
@@ -141,25 +137,23 @@ function messageBox(messageHtml: string, px = 22) {
   </tr>`
 }
 
-/** ---------- wrapper ---------- */
-
-function baseWrap(preheader: string, title: string, contentRows: string, siteUrl?: string) {
+function baseWrap(preheader: string, title: string, contentRows: string, siteUrl?: string, lang: Lang = 'de') {
   const base = normalizeSiteUrl(siteUrl)
   const logoUrl = `${base}/logos/mvpwerk_logo_trans.png`
 
+  const footerLine =
+    lang === 'en'
+      ? `Questions? Email us at <a href="mailto:${BRAND.supportEmail}" style="color:${BRAND.text};text-decoration:underline;">${BRAND.supportEmail}</a>`
+      : `Fragen? Schreiben Sie uns an <a href="mailto:${BRAND.supportEmail}" style="color:${BRAND.text};text-decoration:underline;">${BRAND.supportEmail}</a>`
+
   return `<!doctype html>
-<html lang="de">
+<html lang="${lang}">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width" />
-
-  <!-- ✅ FORCE LIGHT LOOK -->
   <meta name="color-scheme" content="light" />
   <meta name="supported-color-schemes" content="light" />
-
-  <!-- ✅ stop iOS from auto-blue links where possible -->
   <meta name="format-detection" content="telephone=no,date=no,address=no,email=no,url=no" />
-
   <title>${escapeHtml(title)}</title>
 
   <style>
@@ -168,14 +162,8 @@ function baseWrap(preheader: string, title: string, contentRows: string, siteUrl
       .px { padding-left: 16px !important; padding-right: 16px !important; }
       .t { font-size: 20px !important; line-height: 1.25 !important; }
     }
-
-    /* ✅ keep links NOT blue */
     a, a:visited { color: ${BRAND.text} !important; text-decoration: underline !important; }
-
-    /* ✅ Apple Mail / iOS auto-detected links */
-    a[x-apple-data-detectors],
-    .apple-link a,
-    #MessageViewBody a {
+    a[x-apple-data-detectors], .apple-link a, #MessageViewBody a {
       color: ${BRAND.text} !important;
       text-decoration: underline !important;
       font-size: inherit !important;
@@ -183,8 +171,6 @@ function baseWrap(preheader: string, title: string, contentRows: string, siteUrl
       font-weight: inherit !important;
       line-height: inherit !important;
     }
-
-    /* ✅ if client tries dark mode anyway: force white/bg + black text */
     @media (prefers-color-scheme: dark) {
       body, table, td, div { background: #FFFFFF !important; color: ${BRAND.text} !important; }
       .force-card { background:#FFFFFF !important; }
@@ -195,7 +181,6 @@ function baseWrap(preheader: string, title: string, contentRows: string, siteUrl
 
 <body style="margin:0;padding:0;background:${BRAND.bg};color:${BRAND.text};
   -webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
-  <!-- preheader -->
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;mso-hide:all;">
     ${escapeHtml(preheader)}
   </div>
@@ -205,7 +190,6 @@ function baseWrap(preheader: string, title: string, contentRows: string, siteUrl
     <tr>
       <td align="center" style="padding:0 12px;">
 
-        <!-- main card -->
         <table role="presentation" width="${CONTAINER_W}" cellpadding="0" cellspacing="0"
           class="container force-card" bgcolor="${BRAND.card}"
           style="width:${CONTAINER_W}px;max-width:${CONTAINER_W}px;margin:0 auto;background:${BRAND.card};
@@ -214,7 +198,6 @@ function baseWrap(preheader: string, title: string, contentRows: string, siteUrl
             <td style="height:3px;background:${BRAND.text};font-size:0;line-height:0;">&nbsp;</td>
           </tr>
 
-          <!-- header -->
           <tr>
             <td class="px" style="padding:18px 22px 10px 22px;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
@@ -235,20 +218,15 @@ function baseWrap(preheader: string, title: string, contentRows: string, siteUrl
           </tr>
 
           ${contentRows}
-
         </table>
 
-        <!-- footer -->
         <table role="presentation" width="${CONTAINER_W}" cellpadding="0" cellspacing="0" class="container"
           style="width:${CONTAINER_W}px;max-width:${CONTAINER_W}px;margin:14px auto 0;">
           <tr>
             <td align="center" style="padding:12px 10px;">
               <p style="margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
                 font-size:12px;line-height:1.6;color:${BRAND.text};font-weight:600;">
-                Fragen? Schreiben Sie uns an
-                <a href="mailto:${BRAND.supportEmail}" style="color:${BRAND.text};text-decoration:underline;">
-                  ${BRAND.supportEmail}
-                </a>
+                ${footerLine}
               </p>
               <p style="margin:6px 0 0 0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
                 font-size:11px;line-height:1.6;color:${BRAND.text};">
@@ -265,28 +243,53 @@ function baseWrap(preheader: string, title: string, contentRows: string, siteUrl
 </html>`
 }
 
-/** ---------- templates ---------- */
-
+/** ✅ Customer Mail (DE/EN via ctx.lang) */
 export function renderMvpwerkContactCustomerMail(ctx: ContactCtx) {
-  const pre = `Danke – wir haben Ihre Anfrage erhalten und melden uns in der Regel am selben Tag.`
-  const title = `Wir haben Ihre Anfrage erhalten – ${BRAND.name}`
+  const lang: Lang = ctx.lang === 'en' ? 'en' : 'de'
   const fullName = `${ctx.firstName} ${ctx.lastName}`.trim()
 
+  const copy =
+    lang === 'en'
+      ? {
+          pre: `Thanks — we received your request and usually reply the same day.`,
+          title: `We received your request — ${BRAND.name}`,
+          h: `Thanks for reaching out, ${escapeHtml(ctx.firstName)}!`,
+          lead: `We received your request and will get back to you — usually the same day.`,
+          section: 'Your details',
+          msgSection: 'Your message',
+          tip: `Tip: If you'd like to add more context, simply reply to this email.`,
+          name: 'Name',
+          mail: 'Email',
+          phone: 'Phone',
+        }
+      : {
+          pre: `Danke – wir haben Ihre Anfrage erhalten und melden uns in der Regel am selben Tag.`,
+          title: `Wir haben Ihre Anfrage erhalten – ${BRAND.name}`,
+          h: `Danke für Ihre Anfrage, ${escapeHtml(ctx.firstName)}!`,
+          lead: `Wir haben Ihre Anfrage erhalten und melden uns in der Regel am selben Tag zurück.`,
+          section: 'Ihre Angaben',
+          msgSection: 'Ihre Nachricht',
+          tip: `Tipp: Falls Sie noch Kontext ergänzen möchten, antworten Sie einfach auf diese E-Mail.`,
+          name: 'Name',
+          mail: 'E-Mail',
+          phone: 'Telefon',
+        }
+
   const rows = `
-    ${h1(`Danke für Ihre Anfrage, ${escapeHtml(ctx.firstName)}!`)}
-    ${p('Wir haben Ihre Anfrage erhalten und melden uns in der Regel am selben Tag zurück.')}
+    ${h1(copy.h)}
+    ${p(copy.lead)}
 
     ${divider()}
-    ${sectionTitle('Ihre Angaben')}
-    ${field('Name', escapeHtml(fullName), 22, false)}
+    ${sectionTitle(copy.section)}
+    ${field(copy.name, escapeHtml(fullName), 22, false)}
     ${field(
-      'E-Mail',
+      copy.mail,
       `<a href="mailto:${escapeHtml(ctx.email)}" style="color:${BRAND.text};text-decoration:underline;">${escapeHtml(
         ctx.email
       )}</a>`
     )}
     ${field(
-      'Telefon',
+      copy.phone,
       `<a href="tel:${escapeHtml(ctx.phone)}" style="color:${BRAND.text};text-decoration:underline;">${escapeHtml(
         ctx.phone
       )}</a>`
@@ -296,7 +299,7 @@ export function renderMvpwerkContactCustomerMail(ctx: ContactCtx) {
       ctx.message?.trim()
         ? `
           ${divider()}
-          ${sectionTitle('Ihre Nachricht')}
+          ${sectionTitle(copy.msgSection)}
           ${messageBox(nl2br(ctx.message))}
         `
         : ''
@@ -307,55 +310,84 @@ export function renderMvpwerkContactCustomerMail(ctx: ContactCtx) {
       <td class="px" style="padding:12px 22px 18px 22px;">
         <div style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
           font-size:12px;line-height:1.6;color:${BRAND.text};font-weight:600;">
-          Tipp: Falls Sie noch Kontext ergänzen möchten, antworten Sie einfach auf diese E-Mail.
+          ${copy.tip}
         </div>
       </td>
     </tr>
   `
 
-  return baseWrap(pre, title, rows, ctx.siteUrl)
+  return baseWrap(copy.pre, copy.title, rows, ctx.siteUrl, lang)
 }
 
+/** ✅ Internal Mail (optional ebenfalls EN) */
 export function renderMvpwerkContactInternalMail(ctx: ContactCtx) {
-  const pre = `Neue Kontaktanfrage von ${ctx.firstName} ${ctx.lastName}`
-  const title = `Neue Kontaktanfrage – ${BRAND.name}`
+  const lang: Lang = ctx.lang === 'en' ? 'en' : 'de'
   const fullName = `${ctx.firstName} ${ctx.lastName}`.trim()
-  const submittedAt = new Date().toLocaleString('de-DE')
+  const submittedAt = new Date().toLocaleString(lang === 'en' ? 'en-GB' : 'de-DE')
+
+  const copy =
+    lang === 'en'
+      ? {
+          pre: `New contact request from ${ctx.firstName} ${ctx.lastName}`,
+          title: `New contact request — ${BRAND.name}`,
+          h: 'New contact request',
+          source: 'Source',
+          contact: 'Contact',
+          msg: 'Message',
+          none: '— (no message provided)',
+          name: 'Name',
+          mail: 'Email',
+          phone: 'Phone',
+          hint: `Note: Reply-To is set to the customer — just reply to this email.`,
+        }
+      : {
+          pre: `Neue Kontaktanfrage von ${ctx.firstName} ${ctx.lastName}`,
+          title: `Neue Kontaktanfrage – ${BRAND.name}`,
+          h: 'Neue Kontaktanfrage',
+          source: 'Quelle',
+          contact: 'Kontakt',
+          msg: 'Nachricht',
+          none: '– (keine Nachricht angegeben)',
+          name: 'Name',
+          mail: 'E-Mail',
+          phone: 'Telefon',
+          hint: `Hinweis: Reply-To ist auf den Kunden gesetzt – antworten Sie einfach direkt auf diese E-Mail.`,
+        }
 
   const rows = `
-    ${h1('Neue Kontaktanfrage')}
+    ${h1(copy.h)}
 
     <tr>
       <td class="px" style="padding:0 22px 12px 22px;">
         <div style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
           font-size:13px;line-height:1.65;color:${BRAND.text};font-weight:600;">
-          Quelle: <b style="color:${BRAND.text};">/kontakt</b> · ${escapeHtml(submittedAt)}
+          ${copy.source}: <b style="color:${BRAND.text};">/kontakt</b> · ${escapeHtml(submittedAt)}
         </div>
       </td>
     </tr>
 
     ${divider()}
-    ${sectionTitle('Kontakt')}
-    ${field('Name', escapeHtml(fullName), 22, false)}
+    ${sectionTitle(copy.contact)}
+    ${field(copy.name, escapeHtml(fullName), 22, false)}
     ${field(
-      'E-Mail',
+      copy.mail,
       `<a href="mailto:${escapeHtml(ctx.email)}" style="color:${BRAND.text};text-decoration:underline;">${escapeHtml(
         ctx.email
       )}</a>`
     )}
     ${field(
-      'Telefon',
+      copy.phone,
       `<a href="tel:${escapeHtml(ctx.phone)}" style="color:${BRAND.text};text-decoration:underline;">${escapeHtml(
         ctx.phone
       )}</a>`
     )}
 
     ${divider()}
-    ${sectionTitle('Nachricht')}
+    ${sectionTitle(copy.msg)}
     ${
       ctx.message?.trim()
         ? messageBox(nl2br(ctx.message))
-        : messageBox(`<span style="color:${BRAND.text};font-weight:600;">– (keine Nachricht angegeben)</span>`)
+        : messageBox(`<span style="color:${BRAND.text};font-weight:600;">${copy.none}</span>`)
     }
 
     ${divider()}
@@ -363,13 +395,13 @@ export function renderMvpwerkContactInternalMail(ctx: ContactCtx) {
       <td class="px" style="padding:12px 22px 18px 22px;">
         <div style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
           font-size:12px;line-height:1.6;color:${BRAND.text};font-weight:600;">
-          Hinweis: Reply-To ist auf den Kunden gesetzt – antworten Sie einfach direkt auf diese E-Mail.
+          ${copy.hint}
         </div>
       </td>
     </tr>
   `
 
-  return baseWrap(pre, title, rows, ctx.siteUrl)
+  return baseWrap(copy.pre, copy.title, rows, ctx.siteUrl, lang)
 }
 
 export const MVPWERK_SUPPORT_EMAIL = BRAND.supportEmail

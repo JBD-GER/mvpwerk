@@ -1,7 +1,8 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+
+type Lang = 'de' | 'en'
 
 type Tag =
   | 'Beratung'
@@ -71,8 +72,74 @@ function I({ d }: { d: string }) {
   )
 }
 
-/* ----------------------------- Phasen / Leistungen ----------------------------- */
-const PHASES: Phase[] = [
+/* ----------------------------- TAG LABELS (DE/EN) ----------------------------- */
+const TAG_LABEL: Record<Lang, Record<Tag, string>> = {
+  de: {
+    Beratung: 'Beratung',
+    MVP: 'MVP',
+    'UI/UX': 'UI/UX',
+    Frontend: 'Frontend',
+    Backend: 'Backend',
+    API: 'API',
+    Datenbank: 'Datenbank',
+    Auth: 'Auth',
+    Security: 'Security',
+    KI: 'KI',
+    Integrationen: 'Integrationen',
+    Tracking: 'Tracking',
+    SEO: 'SEO',
+    'E-Mail': 'E-Mail',
+    Deployment: 'Deployment',
+    Hosting: 'Hosting',
+    Payments: 'Payments',
+    'E-Commerce': 'E-Commerce',
+    Monitoring: 'Monitoring',
+    Support: 'Support',
+    Wartung: 'Wartung',
+    Performance: 'Performance',
+    Testing: 'Testing',
+    Migration: 'Migration',
+    Reporting: 'Reporting',
+    Realtime: 'Realtime',
+    Search: 'Search',
+    Mobile: 'Mobile',
+    Compliance: 'Compliance',
+  },
+  en: {
+    Beratung: 'Consulting',
+    MVP: 'MVP',
+    'UI/UX': 'UI/UX',
+    Frontend: 'Frontend',
+    Backend: 'Backend',
+    API: 'API',
+    Datenbank: 'Database',
+    Auth: 'Auth',
+    Security: 'Security',
+    KI: 'AI',
+    Integrationen: 'Integrations',
+    Tracking: 'Tracking',
+    SEO: 'SEO',
+    'E-Mail': 'Email',
+    Deployment: 'Deployment',
+    Hosting: 'Hosting',
+    Payments: 'Payments',
+    'E-Commerce': 'E-Commerce',
+    Monitoring: 'Monitoring',
+    Support: 'Support',
+    Wartung: 'Maintenance',
+    Performance: 'Performance',
+    Testing: 'Testing',
+    Migration: 'Migration',
+    Reporting: 'Reporting',
+    Realtime: 'Realtime',
+    Search: 'Search',
+    Mobile: 'Mobile',
+    Compliance: 'Compliance',
+  },
+}
+
+/* ----------------------------- Phasen / Leistungen (DE) ----------------------------- */
+const PHASES_DE: Phase[] = [
   {
     id: 'strategie',
     title: 'Strategie & MVP-Plan',
@@ -326,6 +393,215 @@ const PHASES: Phase[] = [
   },
 ]
 
+/* ----------------------------- Phasen / Leistungen (EN) ----------------------------- */
+/**
+ * Wichtig: Damit die Leistungen auch auf EN angezeigt werden,
+ * übersetzen wir Titel/Subtitel UND Items (it.t / it.s) via Mapping,
+ * ohne alles doppelt zu pflegen.
+ */
+type ItemKey = `${string}::${string}`
+
+const PHASE_TR_EN: Record<string, { title: string; subtitle: string }> = {
+  strategie: { title: 'Strategy & MVP plan', subtitle: 'Scope, budget, roadmap – so the MVP goes live fast.' },
+  design: { title: 'UI/UX & product feel', subtitle: 'So it feels like finished software – not a prototype.' },
+  frontend: { title: 'Frontend (Next.js / React)', subtitle: 'Fast, clean, component-based – campaign-ready.' },
+  backend: { title: 'Backend & API', subtitle: 'Business logic, APIs, jobs – stable and scalable.' },
+  datenbank: { title: 'Database (Supabase/Postgres)', subtitle: 'Clean schema, RLS, indexes – so it won’t hurt later.' },
+  auth: { title: 'Login, roles & security', subtitle: 'Multi-user, properly secured, GDPR-friendly.' },
+  payments: { title: 'Payments & monetization', subtitle: 'Checkout, subscriptions, invoices, trials – for SaaS & web apps.' },
+  integrationen: { title: 'Integrations & automation', subtitle: 'Connect tools, systems & processes – without duct tape.' },
+  ki: { title: 'AI integration', subtitle: 'AI where it truly helps – not as a gimmick.' },
+  tracking: { title: 'Tracking, analytics & SEO', subtitle: 'Clean measurement – GDPR-compliant via consent.' },
+  kommunikation: { title: 'Emails, notifications & workflows', subtitle: 'So your product stays alive – and users stick.' },
+  betrieb: { title: 'Deployment, hosting & operations', subtitle: 'Go live fast – stay stable – iterate cleanly.' },
+  betreuung: { title: 'Maintenance & support (packages)', subtitle: 'Predictable. Fast. No ticket hell.' },
+  migration: { title: 'Migration & modernization', subtitle: 'If something exists: migrate cleanly instead of reinventing.' },
+}
+
+const ITEM_TR_EN: Record<ItemKey, { t: string; s: string }> = {
+  // strategie
+  'strategie::MVP-Scoping': { t: 'MVP scoping', s: 'What must be in — and what we deliberately leave out.' },
+  'strategie::MVP Budget & Aufwandsschätzung': { t: 'MVP budget & effort estimate', s: 'A realistic time/budget range instead of gut feeling.' },
+  'strategie::User Journeys & Kernflows': { t: 'User journeys & core flows', s: 'The 3–5 most important flows that deliver value.' },
+  'strategie::PRD / Spec Light': { t: 'PRD / spec (light)', s: 'Short spec: goals, roles, data, rules.' },
+  'strategie::Tech-Stack Auswahl': { t: 'Tech stack selection', s: 'A route that ships fast and stays maintainable.' },
+  'strategie::Architektur-Skizze (leichtgewichtig)': { t: 'Lightweight architecture sketch', s: 'Data model, roles, services — without overengineering.' },
+  'strategie::MVP Roadmap (4–8 Wochen)': { t: 'MVP roadmap (4–8 weeks)', s: 'Milestones + a weekly demo rhythm.' },
+  'strategie::Risiko-Check (Performance/Security)': { t: 'Risk check (performance/security)', s: 'Spot what will get expensive later — early.' },
+  'strategie::Daten & Rollen definieren': { t: 'Define data & roles', s: 'Who owns what data? Which role can see what?' },
+  'strategie::Release-Plan & Go-Live Setup': { t: 'Release plan & go-live setup', s: 'Staging → production, checklists, rollback plan.' },
+
+  // design
+  'design::UI System / Design-Library': { t: 'UI system / design library', s: 'Consistent components for fast iteration.' },
+  'design::Wireframes (Low-Fidelity)': { t: 'Wireframes (low fidelity)', s: 'Clarify structure fast — before making it pretty.' },
+  'design::High-Fidelity UI': { t: 'High-fidelity UI', s: 'Clean interface incl. states (loading/empty/error).' },
+  'design::Dashboard-UX': { t: 'Dashboard UX', s: 'Cards, tables, filters — quiet premium look.' },
+  'design::Formular-UX': { t: 'Form UX', s: 'Validation, states, clear error messages.' },
+  'design::Design QA': { t: 'Design QA', s: 'Pixel checks: spacing, typography, responsiveness, consistency.' },
+  'design::Accessibility Basics': { t: 'Accessibility basics', s: 'Contrast, focus, keyboard nav, screen reader basics.' },
+  'design::Mobile/Tablet Optimierung': { t: 'Mobile/tablet optimization', s: 'Clean breakpoints — not a desktop-only app.' },
+  'design::Micro-Interactions': { t: 'Micro-interactions', s: 'Hover/focus, subtle motion, premium feel.' },
+  'design::Copywriting (UI-Texte)': { t: 'UI copywriting', s: 'Buttons, microcopy, error messages without frustration.' },
+
+  // frontend
+  'frontend::Next.js App Router': { t: 'Next.js App Router', s: 'Clean page structure, layouts, server components.' },
+  'frontend::Komponenten-Architektur': { t: 'Component architecture', s: 'Reusable, testable, clearly separated.' },
+  'frontend::State Management': { t: 'State management', s: 'No chaos: local, global, server-first.' },
+  'frontend::Forms + Validation': { t: 'Forms + validation', s: 'Zod/schema validation, inline errors, good UX.' },
+  'frontend::Tabellen & Filter': { t: 'Tables & filters', s: 'Sticky header, search, sorting, status filters.' },
+  'frontend::Dateiupload UI': { t: 'File upload UI', s: 'Drag & drop, progress, preview, error handling.' },
+  'frontend::PDF / Export UI': { t: 'PDF / export UI', s: 'Export buttons, preview, clean download flows.' },
+  'frontend::Realtime UI': { t: 'Realtime UI', s: 'Live status, streams, activity feed.' },
+  'frontend::Internationalisierung (i18n) Basics': { t: 'Internationalization (i18n) basics', s: 'Go multilingual — without rebuild pain.' },
+  'frontend::Performance Optimierung': { t: 'Performance optimization', s: 'Images, caching, lazy loading, bundle tuning.' },
+
+  // backend
+  'backend::API Routes / Server Actions': { t: 'API routes / server actions', s: 'Clean endpoints + validation.' },
+  'backend::API-Design': { t: 'API design', s: 'Clear responses, error codes, versioning.' },
+  'backend::Webhooks (Inbound/Outbound)': { t: 'Webhooks (inbound/outbound)', s: 'Stripe, CRM, tools — signed & robust.' },
+  'backend::Background Jobs / Cron': { t: 'Background jobs / cron', s: 'Imports, sync, reminders — reliable in the background.' },
+  'backend::Rate Limits & Abuse-Schutz': { t: 'Rate limits & abuse protection', s: 'Protection against spam/bruteforce/DoS-light.' },
+  'backend::Datei-Uploads & Storage': { t: 'File uploads & storage', s: 'Buckets, path logic, protected access.' },
+  'backend::CSV/Excel Import': { t: 'CSV/Excel import', s: 'Mapping, validation, errors, dry-run.' },
+  'backend::Exports & Reporting': { t: 'Exports & reporting', s: 'CSV/PDF exports, reports, aggregated KPIs.' },
+  'backend::Suche (Full-Text)': { t: 'Search (full-text)', s: 'Fast search across customers, projects, documents.' },
+  'backend::Realtime / Subscriptions': { t: 'Realtime / subscriptions', s: 'Live updates, status changes, team collaboration.' },
+
+  // datenbank
+  'datenbank::Datenbank-Schema': { t: 'Database schema', s: 'Constraints, indexes, clean relations.' },
+  'datenbank::RLS Policies (Multi-Tenant)': { t: 'RLS policies (multi-tenant)', s: 'Data access secured per account/team.' },
+  'datenbank::Migrations & Versionierung': { t: 'Migrations & versioning', s: 'Reproducible, clean schema changes.' },
+  'datenbank::Performance Indizes': { t: 'Performance indexes', s: 'Query optimization, explain plans, real speed wins.' },
+  'datenbank::Audit Logs (light)': { t: 'Audit logs (light)', s: 'Who changed what — traceable in the team.' },
+  'datenbank::Backups & Restore-Plan': { t: 'Backups & restore plan', s: 'Regular backups + recovery test.' },
+  'datenbank::Datenimport & Bereinigung': { t: 'Data import & cleanup', s: 'Bring legacy data over cleanly.' },
+  'datenbank::Views & Reporting Tabellen': { t: 'Views & reporting tables', s: 'KPIs without code chaos.' },
+  'datenbank::Row-Level Datenschutz': { t: 'Row-level privacy', s: 'Minimization, access control, sensitive fields.' },
+  'datenbank::Realtime Tabellen Setup': { t: 'Realtime tables setup', s: 'Clean channels/policies for live updates.' },
+
+  // auth
+  'auth::Login & Registrierung': { t: 'Login & registration', s: 'Email/password, magic links optional.' },
+  'auth::Google OAuth': { t: 'Google OAuth', s: 'Clean Google sign-in integration.' },
+  'auth::Team-Einladungen': { t: 'Team invitations', s: 'Invite flows, tokens/expiry, roles.' },
+  'auth::Rollen & Rechte': { t: 'Roles & permissions', s: 'Admin/user, teams, fine-grained permissions.' },
+  'auth::Session Hardening': { t: 'Session hardening', s: 'Secure cookies, CSRF basics, session rotation.' },
+  'auth::2FA (optional)': { t: '2FA (optional)', s: '2FA flows, recovery codes, device trust.' },
+  'auth::Passwort Reset Flows': { t: 'Password reset flows', s: 'Clean, understandable, secure.' },
+  'auth::Audit / Activity Feed': { t: 'Audit / activity feed', s: 'Logins, changes, critical actions.' },
+  'auth::RLS Review & Tests': { t: 'RLS review & tests', s: 'Test policies, prevent data leaks.' },
+  'auth::DSGVO-Basics': { t: 'GDPR basics', s: 'Data minimization, roles, exports, deletion.' },
+
+  // payments
+  'payments::Stripe Checkout': { t: 'Stripe Checkout', s: 'Fast start: checkout, methods, webhooks.' },
+  'payments::Abos & Plans': { t: 'Subscriptions & plans', s: 'Monthly/yearly, upgrades/downgrades, proration.' },
+  'payments::Free Trial Logik': { t: 'Free trial logic', s: 'Trial → paid, reminders, cutoff handling.' },
+  'payments::Coupons & Promotions': { t: 'Coupons & promotions', s: 'Discounts, codes, campaigns, partner deals.' },
+  'payments::Rechnungen & Belege': { t: 'Invoices & receipts', s: 'Invoice PDFs, numbering, email delivery.' },
+  'payments::VAT / EU-B2B (Basics)': { t: 'VAT / EU B2B (basics)', s: 'Basic tax logic depending on your setup.' },
+  'payments::Customer Portal': { t: 'Customer portal', s: 'Self-serve: plan changes, invoices, payment method.' },
+  'payments::Metered Billing (optional)': { t: 'Metered billing (optional)', s: 'Usage-based: events, limits, billing.' },
+  'payments::Webhooks Hardening': { t: 'Webhooks hardening', s: 'Signatures, retries, idempotency.' },
+  'payments::E-Commerce (wenn nötig)': { t: 'E-commerce (if needed)', s: 'Cart/order/status — kept lightweight.' },
+
+  // integrationen
+  'integrationen::Zapier / Make': { t: 'Zapier / Make', s: 'Automations without custom build — cleanly connected.' },
+  'integrationen::Slack / Teams Alerts': { t: 'Slack / Teams alerts', s: 'Status updates, deploy alerts, channel reminders.' },
+  'integrationen::Google Workspace': { t: 'Google Workspace', s: 'OAuth, Drive/Sheets/Calendar basics.' },
+  'integrationen::E-Mail Provider Setup': { t: 'Email provider setup', s: 'Resend/Sendgrid/SMTP — deliverability + templates.' },
+  'integrationen::SMS / WhatsApp (optional)': { t: 'SMS / WhatsApp (optional)', s: 'Reminders, 2FA, alerts via providers.' },
+  'integrationen::CRM Anbindung': { t: 'CRM integration', s: 'HubSpot/Pipedrive/Sheets — leads in/out.' },
+  'integrationen::Webhooks Plattform': { t: 'Webhook platform', s: 'Your own events + delivery logs.' },
+  'integrationen::Calendar/Scheduling': { t: 'Calendar/scheduling', s: 'Sync, bookings, appointments/slots.' },
+  'integrationen::Maps / Geocoding': { t: 'Maps / geocoding', s: 'Addresses, routes, location features.' },
+  'integrationen::Dokumente & Signatur (optional)': { t: 'Documents & signature (optional)', s: 'PDF flows, signature provider integration.' },
+
+  // ki
+  'ki::KI-Assistent im Dashboard': { t: 'AI assistant in the dashboard', s: 'Chat/command bar for tasks & answers.' },
+  'ki::KI-Workflows / Automationen': { t: 'AI workflows / automations', s: 'Summarize, classify, propose next steps.' },
+  'ki::Dokumente auswerten': { t: 'Document extraction', s: 'PDF/text → structured data in the database.' },
+  'ki::Semantic Search': { t: 'Semantic search', s: 'Find by intent, not just keywords.' },
+  'ki::Prompt- & Output-Sicherheit': { t: 'Prompt & output safety', s: 'Guardrails, logging, clear responsibility.' },
+  'ki::Provider-Anbindung': { t: 'Provider integration', s: 'OpenAI/others — depending on needs & budget.' },
+  'ki::PII-Handling': { t: 'PII handling', s: 'Anonymization/minimization for sensitive data.' },
+  'ki::Human-in-the-loop': { t: 'Human-in-the-loop', s: 'Approval flows so AI doesn’t act unprompted.' },
+  'ki::KI-Textbausteine': { t: 'AI text snippets', s: 'Replies, emails, proposals — faster execution.' },
+  'ki::KI-Logging & Qualität': { t: 'AI logging & quality', s: 'What did AI do? What came out? Debuggable.' },
+
+  // tracking
+  'tracking::Google Tag Manager (GTM)': { t: 'Google Tag Manager (GTM)', s: 'Central setup for tags & events.' },
+  'tracking::Google Analytics 4 (GA4)': { t: 'Google Analytics 4 (GA4)', s: 'Events, conversions, funnels, DebugView.' },
+  'tracking::Conversion Tracking (Google Ads)': { t: 'Conversion tracking (Google Ads)', s: 'Clean conversions + parameters/UTMs.' },
+  'tracking::Server-Side Events (optional)': { t: 'Server-side events (optional)', s: 'More robust measurement, fewer adblock issues.' },
+  'tracking::Consent Mode / Banner': { t: 'Consent mode / banner', s: 'Tags only with consent — properly implemented.' },
+  'tracking::Search Console Setup': { t: 'Search Console setup', s: 'Indexing, sitemaps, Core Web Vitals.' },
+  'tracking::SEO Technik (Next.js)': { t: 'SEO tech (Next.js)', s: 'Metadata, canonicals, OG, JSON-LD.' },
+  'tracking::Landingpage-Performance': { t: 'Landing page performance', s: 'Lighthouse + real conversion improvements.' },
+  'tracking::Event-Schema definieren': { t: 'Define event schema', s: 'Consistent event naming — clean & scalable.' },
+  'tracking::A/B Testing (optional)': { t: 'A/B testing (optional)', s: 'Experiments & hypotheses instead of gut feeling.' },
+
+  // kommunikation
+  'kommunikation::Automatische E-Mails': { t: 'Automated emails', s: 'Signup, login, status, magic links.' },
+  'kommunikation::Transaktionale Mails': { t: 'Transactional emails', s: 'Confirmations, invites, alerts, reports.' },
+  'kommunikation::Reminder-Systeme': { t: 'Reminder systems', s: 'Due dates, deadlines, follow-ups.' },
+  'kommunikation::In-App Inbox': { t: 'In-app inbox', s: 'Notifications inside the product — not just email.' },
+  'kommunikation::Digest E-Mails': { t: 'Digest emails', s: 'Weekly/monthly: reports & summaries.' },
+  'kommunikation::Templates & Branding': { t: 'Templates & branding', s: 'Emails, PDFs, UI — one consistent brand.' },
+  'kommunikation::Webhook-basierte Alerts': { t: 'Webhook-based alerts', s: 'Slack/Teams/webhooks: instant events.' },
+  'kommunikation::Reaktivierung & Onboarding': { t: 'Reactivation & onboarding', s: 'Onboarding mails, tooltips, next steps.' },
+  'kommunikation::Deliverability Basics': { t: 'Deliverability basics', s: 'SPF/DKIM/DMARC + a clean setup.' },
+  'kommunikation::Notification Rules': { t: 'Notification rules', s: 'Who gets what when — without spamming.' },
+
+  // betrieb
+  'betrieb::Vercel Deployment': { t: 'Vercel deployment', s: 'CI/CD, preview deployments, env vars.' },
+  'betrieb::Staging / Preview Umgebungen': { t: 'Staging / preview environments', s: 'Test safely before going live.' },
+  'betrieb::Domains & DNS': { t: 'Domains & DNS', s: 'App subdomain, SSL, redirects.' },
+  'betrieb::Custom Hosting (optional)': { t: 'Custom hosting (optional)', s: 'Render/Hetzner/AWS — as needed.' },
+  'betrieb::Docker (optional)': { t: 'Docker (optional)', s: 'Reproducible deploys, portable infrastructure.' },
+  'betrieb::Monitoring (Uptime)': { t: 'Monitoring (uptime)', s: 'See outages before customers do.' },
+  'betrieb::Error Tracking (Sentry)': { t: 'Error tracking (Sentry)', s: 'Stack traces, releases, alerts — debug-ready.' },
+  'betrieb::Logs & Audit (light)': { t: 'Logs & audit (light)', s: 'Trace instead of guessing.' },
+  'betrieb::Backups & Restore': { t: 'Backups & restore', s: 'Backups + recovery tests.' },
+  'betrieb::Sicherheits-Updates': { t: 'Security updates', s: 'Dependencies, hardening, fast fixes.' },
+
+  // betreuung
+  'betreuung::Betreuungspaket BASIC': { t: 'Support package BASIC', s: 'Monitoring + security updates + small fixes.' },
+  'betreuung::Betreuungspaket PLUS': { t: 'Support package PLUS', s: 'BASIC + monthly mini development (sprints).' },
+  'betreuung::Betreuungspaket PRO': { t: 'Support package PRO', s: 'PLUS + priority/SLAs after setup (optional).' },
+  'betreuung::Bugfix-Garantie (Scope-basiert)': { t: 'Bugfix guarantee (scope-based)', s: 'Critical bugs fixed fast — by priority.' },
+  'betreuung::Feature-Backlog Pflege': { t: 'Feature backlog maintenance', s: 'Collect ideas, prioritize, iterate.' },
+  'betreuung::Performance Checks': { t: 'Performance checks', s: 'Regular Lighthouse/Core Web Vitals checks.' },
+  'betreuung::Monitoring-Tuning': { t: 'Monitoring tuning', s: 'Alerts, SLOs — less noise, more signal.' },
+  'betreuung::Abhängigkeiten & Security Review': { t: 'Dependencies & security review', s: 'Review, patch and harden regularly.' },
+  'betreuung::Kleine UI/UX Verbesserungen': { t: 'Small UI/UX improvements', s: 'Iterate usability & conversion.' },
+  'betreuung::Support-Slot / Sparring': { t: 'Support slot / sparring', s: 'Short calls for decisions & blockers.' },
+
+  // migration
+  'migration::Legacy-Modernisierung': { t: 'Legacy modernization', s: 'Analyze old code → stable upgrade path.' },
+  'migration::DB-Migration': { t: 'Database migration', s: 'Move data, clean up, validate.' },
+  'migration::API-Integration Alt → Neu': { t: 'API integration old → new', s: 'Step-by-step migration without big-bang.' },
+  'migration::UI-Refresh': { t: 'UI refresh', s: 'Modern UI without rebuilding everything.' },
+  'migration::Performance-Rettung': { t: 'Performance rescue', s: 'Make a slow app fast again.' },
+  'migration::Auth-Umzug': { t: 'Auth migration', s: 'Migrate users/sessions cleanly.' },
+  'migration::Tracking-Rebuild': { t: 'Tracking rebuild', s: 'Redefine events cleanly & implement.' },
+  'migration::E-Mail Setup retten': { t: 'Fix email setup', s: 'Improve deliverability, stabilize templates.' },
+  'migration::Staging/Deploy Pipeline aufbauen': { t: 'Build staging/deploy pipeline', s: 'From manual to clean CI/CD.' },
+  'migration::Dokumenten-/Storage-Struktur': { t: 'Documents/storage structure', s: 'Restructure buckets & access properly.' },
+}
+
+const PHASES_EN: Phase[] = PHASES_DE.map((p) => {
+  const ph = PHASE_TR_EN[p.id]
+  return {
+    ...p,
+    title: ph?.title ?? p.title,
+    subtitle: ph?.subtitle ?? p.subtitle,
+    items: p.items.map((it) => {
+      const key = `${p.id}::${it.t}` as ItemKey
+      const tr = ITEM_TR_EN[key]
+      return tr ? { ...it, t: tr.t, s: tr.s } : it
+    }),
+  }
+})
+
 const ALL_TAGS: Tag[] = [
   'Beratung',
   'MVP',
@@ -358,9 +634,72 @@ const ALL_TAGS: Tag[] = [
   'Compliance',
 ]
 
-export default function LeistungenClient() {
+function getUi(lang: Lang) {
+  if (lang === 'en') {
+    return {
+      topBadge: 'Can’t find your service?',
+      topTitle: 'No problem – we build individually per project anyway.',
+      topText:
+        'The list is intentionally broad. If something specific is missing (e.g. a special integration, custom hosting, or a specific role model), send us a quick note – we’ll review requirements and recommend the right modules.',
+      info1k: 'Support packages:',
+      info1v: 'BASIC / PLUS / PRO available.',
+      info2k: 'Hosting:',
+      info2v: 'Vercel or custom (Render/Hetzner/AWS).',
+      info3k: 'Go live fast:',
+      info3v: 'MVP focus, clear milestones, demos.',
+      filterTitle: 'Filter & search',
+      placeholder: 'What are you looking for? (e.g. mail, AI, ...)',
+      reset: 'Reset',
+      all: 'All',
+      moreTags: (n: number) => `More tags (+${n})`,
+      lessTags: 'Fewer tags',
+      tip: 'Tip: Click tags inside cards → instantly filter.',
+      openAll: 'Open all',
+      closeAll: 'Close all',
+      noHits: 'No results. Try “MVP”, “SaaS”, “Supabase”, “Vercel”, “Stripe”, “OAuth”, “GTM”.',
+      phaseCount: (n: number) => `${n} services`,
+      less: 'Less',
+      more: 'More',
+      cardTagTitle: (t: string) => `Filter by tag: ${t}`,
+    }
+  }
+
+  return {
+    topBadge: 'Ihre Leistung nicht gefunden?',
+    topTitle: 'Kein Problem – wir bauen ohnehin individuell pro Projekt.',
+    topText:
+      'Die Liste ist bewusst breit. Wenn etwas Spezifisches fehlt (z. B. Sonder-Integration, spezielles Hosting, besonderes Rollenmodell): schreiben Sie uns kurz – wir prüfen Anforderungen, Scope und empfehlen die passenden Bausteine.',
+    info1k: 'Betreuungspakete:',
+    info1v: 'BASIC / PLUS / PRO möglich.',
+    info2k: 'Hosting:',
+    info2v: 'Vercel oder Custom (Render/Hetzner/AWS).',
+    info3k: 'Schnell live:',
+    info3v: 'MVP-Fokus, klare Milestones, Demos.',
+    filterTitle: 'Filter & Suche',
+    placeholder: 'Was suchen Sie? (z.B. Mail, KI,...)',
+    reset: 'Reset',
+    all: 'Alle',
+    moreTags: (n: number) => `Mehr Tags (+${n})`,
+    lessTags: 'Weniger Tags',
+    tip: 'Tipp: Tags in Karten anklicken → sofort filtern.',
+    openAll: 'Alle öffnen',
+    closeAll: 'Alle schließen',
+    noHits: 'Keine Treffer. Probieren Sie „MVP“, „SaaS“, „Supabase“, „Vercel“, „Stripe“, „OAuth“, „GTM“.',
+    phaseCount: (n: number) => `${n} Leistungen`,
+    less: 'Weniger',
+    more: 'Mehr',
+    cardTagTitle: (t: string) => `Nach Tag filtern: ${t}`,
+  }
+}
+
+type ActiveTag = Tag | 'all'
+
+export default function LeistungenClient({ lang }: { lang: Lang }) {
+  const UI = useMemo(() => getUi(lang), [lang])
+  const PHASES = useMemo(() => (lang === 'en' ? PHASES_EN : PHASES_DE), [lang])
+
   const [q, setQ] = useState('')
-  const [active, setActive] = useState<Tag | 'Alle'>('Alle')
+  const [active, setActive] = useState<ActiveTag>('all')
   const [showAllTags, setShowAllTags] = useState(false)
   const [open, setOpen] = useState<Record<string, boolean>>({})
   const inputRef = useRef<HTMLInputElement | null>(null)
@@ -385,26 +724,32 @@ export default function LeistungenClient() {
       initial[p.id] = isMobile ? idx === 0 : true
     })
     setOpen(initial)
-  }, [])
+  }, [PHASES])
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase()
+
     return PHASES.map((p) => {
       const items = p.items.filter((it) => {
-        const matchesTag = active === 'Alle' ? true : it.tags.includes(active)
+        const matchesTag = active === 'all' ? true : it.tags.includes(active)
+
         const matchesQuery =
           !query ||
           it.t.toLowerCase().includes(query) ||
           it.s.toLowerCase().includes(query) ||
-          it.tags.some((t) => t.toLowerCase().includes(query))
+          // DE Tag Key match
+          it.tags.some((t) => t.toLowerCase().includes(query)) ||
+          // EN/DE Label match
+          it.tags.some((t) => TAG_LABEL[lang][t].toLowerCase().includes(query))
+
         return matchesTag && matchesQuery
       })
       return { ...p, items }
     }).filter((p) => p.items.length > 0)
-  }, [q, active])
+  }, [q, active, PHASES, lang])
 
   useEffect(() => {
-    if (!q && active === 'Alle') return
+    if (!q && active === 'all') return
     setOpen((prev) => {
       const next = { ...prev }
       for (const p of filtered) next[p.id] = true
@@ -414,7 +759,7 @@ export default function LeistungenClient() {
   }, [q, active])
 
   const totalShown = useMemo(() => filtered.reduce((sum, p) => sum + p.items.length, 0), [filtered])
-  const totalAll = useMemo(() => PHASES.reduce((sum, p) => sum + p.items.length, 0), [])
+  const totalAll = useMemo(() => PHASES.reduce((sum, p) => sum + p.items.length, 0), [PHASES])
 
   const visibleTags = useMemo(() => (showAllTags ? ALL_TAGS : ALL_TAGS.slice(0, 10)), [showAllTags])
 
@@ -429,27 +774,23 @@ export default function LeistungenClient() {
         <div className="relative">
           <div className="inline-flex items-center gap-2 rounded-full border border-slate-900/10 bg-white/70 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500/70" />
-            Ihre Leistung nicht gefunden?
+            {UI.topBadge}
           </div>
 
           <h3 className="mt-3 text-[16px] font-semibold tracking-tight text-slate-900 sm:text-[18px]">
-            Kein Problem – wir bauen ohnehin individuell pro Projekt.
+            {UI.topTitle}
           </h3>
-          <p className="mt-1 max-w-[920px] text-[13px] leading-relaxed text-slate-700">
-            Die Liste ist bewusst breit. Wenn etwas Spezifisches fehlt (z. B. Sonder-Integration, spezielles Hosting,
-            besonderes Rollenmodell): schreiben Sie uns kurz – wir prüfen Anforderungen, Scope und empfehlen die passenden
-            Bausteine.
-          </p>
+          <p className="mt-1 max-w-[920px] text-[13px] leading-relaxed text-slate-700">{UI.topText}</p>
 
           <div className="mt-4 grid gap-2 sm:grid-cols-3">
             <div className="rounded-2xl border border-slate-900/10 bg-white/70 p-3 text-[11px] text-slate-700 shadow-sm backdrop-blur">
-              <span className="font-semibold text-slate-900">Betreuungspakete:</span> BASIC / PLUS / PRO möglich.
+              <span className="font-semibold text-slate-900">{UI.info1k}</span> {UI.info1v}
             </div>
             <div className="rounded-2xl border border-slate-900/10 bg-white/70 p-3 text-[11px] text-slate-700 shadow-sm backdrop-blur">
-              <span className="font-semibold text-slate-900">Hosting:</span> Vercel oder Custom (Render/Hetzner/AWS).
+              <span className="font-semibold text-slate-900">{UI.info2k}</span> {UI.info2v}
             </div>
             <div className="rounded-2xl border border-slate-900/10 bg-white/70 p-3 text-[11px] text-slate-700 shadow-sm backdrop-blur">
-              <span className="font-semibold text-slate-900">Schnell live:</span> MVP-Fokus, klare Milestones, Demos.
+              <span className="font-semibold text-slate-900">{UI.info3k}</span> {UI.info3v}
             </div>
           </div>
         </div>
@@ -466,13 +807,15 @@ export default function LeistungenClient() {
         <div className="relative">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="min-w-0">
-              <div className="text-[12px] font-semibold text-slate-900">Filter &amp; Suche</div>
+              <div className="text-[12px] font-semibold text-slate-900">{UI.filterTitle}</div>
               <div className="mt-1 text-[11px] text-slate-600">
-                <span className="font-medium text-slate-900">{totalShown}</span> / {totalAll} Leistungen
-                {active !== 'Alle' ? (
+                <span className="font-medium text-slate-900">{totalShown}</span> / {totalAll}{' '}
+                {lang === 'en' ? 'services' : 'Leistungen'}
+                {active !== 'all' ? (
                   <>
                     {' '}
-                    · Tag: <span className="font-medium text-slate-900">{active}</span>
+                    · {lang === 'en' ? 'Tag' : 'Tag'}:{' '}
+                    <span className="font-medium text-slate-900">{TAG_LABEL[lang][active]}</span>
                   </>
                 ) : null}
               </div>
@@ -484,7 +827,7 @@ export default function LeistungenClient() {
                   ref={inputRef}
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="Was suchen Sie? (z.B. Mail, KI,...)"
+                  placeholder={UI.placeholder}
                   className="h-11 w-full rounded-2xl border border-slate-900/10 bg-white/80 px-4 text-[13px] text-slate-900 shadow-sm outline-none backdrop-blur focus:ring-2 focus:ring-slate-900/10"
                 />
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-400">
@@ -495,20 +838,20 @@ export default function LeistungenClient() {
               <button
                 onClick={() => {
                   setQ('')
-                  setActive('Alle')
+                  setActive('all')
                 }}
                 className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-900/10 bg-white/70 px-4 text-[12px] font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
               >
-                Reset
+                {UI.reset}
               </button>
             </div>
           </div>
 
           {/* Tags: WRAP */}
           <div className="mt-4 flex flex-wrap gap-2">
-            <Chip active={active === 'Alle'} onClick={() => setActive('Alle')} label="Alle" />
+            <Chip active={active === 'all'} onClick={() => setActive('all')} label={UI.all} />
             {visibleTags.map((t) => (
-              <Chip key={t} active={active === t} onClick={() => setActive(t)} label={t} />
+              <Chip key={t} active={active === t} onClick={() => setActive(t)} label={TAG_LABEL[lang][t]} />
             ))}
 
             <button
@@ -516,12 +859,12 @@ export default function LeistungenClient() {
               onClick={() => setShowAllTags((v) => !v)}
               className="rounded-full border border-slate-900/10 bg-white/70 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur transition hover:bg-white"
             >
-              {showAllTags ? 'Weniger Tags' : `Mehr Tags (+${ALL_TAGS.length - 10})`}
+              {showAllTags ? UI.lessTags : UI.moreTags(ALL_TAGS.length - 10)}
             </button>
           </div>
 
           <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-[11px] text-slate-600">Tipp: Tags in Karten anklicken → sofort filtern.</div>
+            <div className="text-[11px] text-slate-600">{UI.tip}</div>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -534,7 +877,7 @@ export default function LeistungenClient() {
                 }
                 className="inline-flex h-9 items-center justify-center rounded-2xl border border-slate-900/10 bg-white/70 px-3 text-[11px] font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white"
               >
-                Alle öffnen
+                {UI.openAll}
               </button>
               <button
                 type="button"
@@ -547,7 +890,7 @@ export default function LeistungenClient() {
                 }
                 className="inline-flex h-9 items-center justify-center rounded-2xl border border-slate-900/10 bg-white/70 px-3 text-[11px] font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white"
               >
-                Alle schließen
+                {UI.closeAll}
               </button>
             </div>
           </div>
@@ -559,7 +902,7 @@ export default function LeistungenClient() {
       {/* Inhalte */}
       {filtered.length === 0 ? (
         <div className="rounded-[1.6rem] border border-slate-900/10 bg-white/70 p-5 text-[13px] text-slate-700 shadow-sm backdrop-blur">
-          Keine Treffer. Probieren Sie „MVP“, „SaaS“, „Supabase“, „Vercel“, „Stripe“, „OAuth“, „GTM“.
+          {UI.noHits}
         </div>
       ) : (
         <div className="space-y-4">
@@ -574,13 +917,15 @@ export default function LeistungenClient() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <h2 className="text-[15px] font-semibold tracking-tight text-slate-900 sm:text-[16px]">{p.title}</h2>
+                      <h2 className="text-[15px] font-semibold tracking-tight text-slate-900 sm:text-[16px]">
+                        {p.title}
+                      </h2>
                       <div className="mt-0.5 text-[12px] text-slate-600">{p.subtitle}</div>
                     </div>
                     <div className="shrink-0 text-right">
-                      <div className="text-[11px] font-medium text-slate-700">{p.items.length} Leistungen</div>
+                      <div className="text-[11px] font-medium text-slate-700">{UI.phaseCount(p.items.length)}</div>
                       <div className="mt-1 inline-flex items-center gap-2 text-[11px] text-slate-500">
-                        <span>{isOpen ? 'Weniger' : 'Mehr'}</span>
+                        <span>{isOpen ? UI.less : UI.more}</span>
                         <span className="inline-block">{isOpen ? '▾' : '▸'}</span>
                       </div>
                     </div>
@@ -591,7 +936,7 @@ export default function LeistungenClient() {
                   <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {p.items.map((it) => (
                       <div
-                        key={it.t}
+                        key={`${p.id}-${it.t}`}
                         className="relative overflow-hidden rounded-[1.4rem] border border-slate-900/10 bg-white/70 p-4 shadow-sm backdrop-blur transition hover:bg-white/80"
                       >
                         <div className="flex items-start gap-3">
@@ -608,9 +953,9 @@ export default function LeistungenClient() {
                                   type="button"
                                   onClick={() => setActive(t)}
                                   className="inline-flex items-center rounded-full border border-slate-900/10 bg-white/70 px-2 py-0.5 text-[10px] font-medium text-slate-700 shadow-sm transition hover:bg-white"
-                                  title={`Nach Tag filtern: ${t}`}
+                                  title={UI.cardTagTitle(TAG_LABEL[lang][t])}
                                 >
-                                  {t}
+                                  {TAG_LABEL[lang][t]}
                                 </button>
                               ))}
                               {it.tags.length > 2 ? (

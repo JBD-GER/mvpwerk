@@ -6,32 +6,135 @@ import KontaktClient from './KontaktClient'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mvpwerk.de'
 const TEAM_IMAGE = '/bilder/gruppenbild_mvpwerk.png'
 
-export const metadata: Metadata = {
-  title: 'Kontakt – MVPWERK',
-  description:
-    'Kontakt zu MVPWERK: Projekt anfragen für MVP, SaaS oder Web App. Pflichtfelder: Vorname, Nachname, E-Mail, Telefon. Antwort meist am selben Tag.',
-  alternates: { canonical: '/kontakt' },
-  openGraph: {
-    type: 'website',
-    url: `${SITE_URL}/kontakt`,
-    title: 'Kontakt – MVPWERK',
-    description: 'Projekt anfragen: MVP, SaaS, Web App – schnell, sauber, übergabefähig.',
-    images: [
-      {
-        url: `${SITE_URL}/og/kontakt.png`,
-        width: 1200,
-        height: 630,
-        alt: 'Kontakt – MVPWERK',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Kontakt – MVPWERK',
-    description: 'Projekt anfragen: MVP, SaaS, Web App – schnell, sauber, übergabefähig.',
-    images: [`${SITE_URL}/og/kontakt.png`],
-  },
-  robots: { index: true, follow: true },
+type Lang = 'de' | 'en'
+
+function normalizeLang(v: unknown): Lang | null {
+  if (!v) return null
+  const s = Array.isArray(v) ? String(v[0] ?? '') : String(v)
+  const x = s.toLowerCase()
+  if (x === 'de' || x.startsWith('de-')) return 'de'
+  if (x === 'en' || x.startsWith('en-')) return 'en'
+  return null
+}
+
+function getT(lang: Lang) {
+  if (lang === 'en') {
+    return {
+      metaTitle: 'Contact – MVPWERK',
+      metaDescription:
+        'Contact MVPWERK: request a project for MVP, SaaS or Web App. Required: first name, last name, email, phone. Reply usually the same day.',
+      ogDescription: 'Request your project: MVP, SaaS, Web App — fast, clean, handover-ready.',
+      jsonLdName: 'Contact – MVPWERK',
+
+      badge: 'Contact',
+      h1: 'Request a project — without detours.',
+      lead:
+        'Send the basics — we’ll reply with the fastest, cleanest route (scope, timeline, the right building blocks).',
+
+      chipIntro: 'Intro call (15–30 min) · no obligation',
+      chipSameDay: 'Reply usually the same day',
+      chipNda: 'NDA available · confidential',
+
+      sealsTitle: 'Partners & awards',
+      topRated: 'Top rated',
+
+      shortBoxTitle: 'Short. Clear. No obligation.',
+      shortBoxText: 'Goal: clarity on scope, timeline and budget — without overengineering.',
+
+      bottomTitle: 'What you get in the intro call',
+      bottomText: 'A clear technical recommendation — pragmatic, realistic, handover-ready.',
+
+      c1t: 'Format',
+      c1v: 'Zoom / Google Meet / Phone',
+      c2t: 'Scope',
+      c2v: 'MVP cut + must-haves',
+      c3t: 'Timeline',
+      c3v: 'Realistic steps & order',
+      c4t: 'Setup',
+      c4v: 'Next.js · Vercel · Supabase',
+
+      teamAlt: 'Team – MVPWERK',
+      kontaktOgAlt: 'Contact – MVPWERK',
+    }
+  }
+
+  return {
+    metaTitle: 'Kontakt – MVPWERK',
+    metaDescription:
+      'Kontakt zu MVPWERK: Projekt anfragen für MVP, SaaS oder Web App. Pflichtfelder: Vorname, Nachname, E-Mail, Telefon. Antwort meist am selben Tag.',
+    ogDescription: 'Projekt anfragen: MVP, SaaS, Web App – schnell, sauber, übergabefähig.',
+    jsonLdName: 'Kontakt – MVPWERK',
+
+    badge: 'Kontakt',
+    h1: 'Projekt anfragen – ohne Umwege.',
+    lead:
+      'Sie schicken die Basics – wir melden uns mit der schnellsten, sauberen Route (Scope, Timeline, passende Bausteine).',
+
+    chipIntro: 'Erstgespräch (15–30 Min) · unverbindlich',
+    chipSameDay: 'Antwort meist am selben Tag',
+    chipNda: 'NDA möglich · vertraulich',
+
+    sealsTitle: 'Partner & Auszeichnung',
+    topRated: 'Top bewertet',
+
+    shortBoxTitle: 'Kurz. Klar. Unverbindlich.',
+    shortBoxText: 'Ziel: Klarheit zu Scope, Timeline und Budgetrahmen – ohne Overengineering.',
+
+    bottomTitle: 'Was Sie im Erstgespräch bekommen',
+    bottomText: 'Eine klare technische Empfehlung – pragmatisch, realistisch, übergabefähig.',
+
+    c1t: 'Format',
+    c1v: 'Zoom / Google Meet / Telefon',
+    c2t: 'Scope',
+    c2v: 'MVP-Schnitt + Muss-Kriterien',
+    c3t: 'Timeline',
+    c3v: 'Realistische Schritte & Reihenfolge',
+    c4t: 'Setup',
+    c4v: 'Next.js · Vercel · Supabase',
+
+    teamAlt: 'Team – MVPWERK',
+    kontaktOgAlt: 'Kontakt – MVPWERK',
+  }
+}
+
+// ✅ Next.js (Server Page): searchParams awaiten (wie bei dir im Projekt)
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}): Promise<Metadata> {
+  const sp = await searchParams
+  const lang = normalizeLang(sp?.lang) ?? 'de'
+  const t = getT(lang)
+
+  const ogUrl = `${SITE_URL}/kontakt${lang === 'en' ? '?lang=en' : ''}`
+
+  return {
+    title: t.metaTitle,
+    description: t.metaDescription,
+    alternates: { canonical: '/kontakt' },
+    openGraph: {
+      type: 'website',
+      url: ogUrl,
+      title: t.metaTitle,
+      description: t.ogDescription,
+      images: [
+        {
+          url: `${SITE_URL}/og/kontakt.png`,
+          width: 1200,
+          height: 630,
+          alt: t.kontaktOgAlt,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t.metaTitle,
+      description: t.ogDescription,
+      images: [`${SITE_URL}/og/kontakt.png`],
+    },
+    robots: { index: true, follow: true },
+  }
 }
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -115,12 +218,20 @@ function ChatIcon() {
   )
 }
 
-export default function KontaktPage() {
+export default async function KontaktPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const sp = await searchParams
+  const lang = normalizeLang(sp?.lang) ?? 'de'
+  const t = getT(lang)
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ContactPage',
-    name: 'Kontakt – MVPWERK',
-    url: `${SITE_URL}/kontakt`,
+    name: t.jsonLdName,
+    url: `${SITE_URL}/kontakt${lang === 'en' ? '?lang=en' : ''}`,
     isPartOf: { '@type': 'WebSite', name: 'MVPWERK', url: SITE_URL },
   }
 
@@ -143,32 +254,29 @@ export default function KontaktPage() {
       <header className="relative mx-auto w-full max-w-[1400px] px-4 pt-8 sm:px-6 sm:pt-10">
         <div className="inline-flex items-center gap-2 rounded-full border border-slate-900/10 bg-white/70 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur">
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500/70" />
-          Kontakt
+          {t.badge}
         </div>
 
         <h1 className="mt-3 text-[28px] font-semibold leading-[1.08] tracking-tight text-slate-900 sm:text-[38px] md:text-[44px]">
-          Projekt anfragen – ohne Umwege.
+          {t.h1}
         </h1>
 
-        <p className="mt-2 max-w-[820px] text-[13px] leading-relaxed text-slate-700 sm:text-[14px]">
-          Sie schicken die Basics – wir melden uns mit der schnellsten, sauberen Route (Scope, Timeline, passende
-          Bausteine).
-        </p>
+        <p className="mt-2 max-w-[820px] text-[13px] leading-relaxed text-slate-700 sm:text-[14px]">{t.lead}</p>
 
         <div className="mt-4 flex flex-wrap gap-2">
           <span className="inline-flex items-center gap-2 rounded-full border border-slate-900/10 bg-white/70 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500/70" />
-            Erstgespräch (15–30 Min) · unverbindlich
+            {t.chipIntro}
           </span>
 
           <span className="inline-flex items-center gap-2 rounded-full border border-slate-900/10 bg-white/70 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur">
             <ClockIcon />
-            Antwort meist am selben Tag
+            {t.chipSameDay}
           </span>
 
           <span className="inline-flex items-center gap-2 rounded-full border border-slate-900/10 bg-white/70 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur">
             <ShieldIcon />
-            NDA möglich · vertraulich
+            {t.chipNda}
           </span>
         </div>
       </header>
@@ -180,21 +288,20 @@ export default function KontaktPage() {
           <div className="lg:col-span-5">
             <Card className="h-full flex flex-col">
               <div className="relative flex-1 min-h-[320px] w-full">
-                {/* Image card */}
                 <div className="relative h-full w-full overflow-hidden rounded-[1.5rem]">
-                  <Image src={TEAM_IMAGE} alt="Team – MVPWERK" fill className="object-cover object-top" priority />
+                  <Image src={TEAM_IMAGE} alt={t.teamAlt} fill className="object-cover object-top" priority />
                 </div>
 
-                {/* Floating seals box (wie in TeamSection) */}
+                {/* Floating seals box */}
                 <div className="absolute bottom-3 left-1/2 z-10 w-[calc(100%-1.25rem)] -translate-x-1/2 sm:bottom-4 sm:w-[calc(100%-2rem)]">
                   <div className="rounded-[1.4rem] border border-slate-900/10 bg-white/85 p-3 shadow-[0_18px_55px_rgba(15,23,42,0.12)] backdrop-blur-xl sm:rounded-[1.6rem] sm:p-5">
                     <div className="flex items-center justify-between gap-2">
                       <div className="truncate text-[11px] font-semibold text-slate-900 sm:text-[12px]">
-                        Partner &amp; Auszeichnung
+                        {t.sealsTitle}
                       </div>
 
                       <div className="inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-900/10 bg-white/90 px-2.5 py-1 text-[10px] font-medium text-slate-700 shadow-sm sm:px-3 sm:text-[11px]">
-                        <span className="text-slate-900">Top bewertet</span>
+                        <span className="text-slate-900">{t.topRated}</span>
                         <span className="text-amber-500">★★★★★</span>
                         <span className="text-slate-900">4.9</span>
                       </div>
@@ -243,17 +350,13 @@ export default function KontaktPage() {
                   </div>
                 </div>
 
-                {/* subtle inner ring */}
                 <div className="pointer-events-none absolute inset-0 rounded-[1.5rem] ring-1 ring-inset ring-white/40" />
               </div>
 
-              {/* darunter: nur kurzer Textblock (ohne „So läuft’s ab“) */}
               <div className="p-5">
                 <div className="rounded-2xl border border-slate-900/10 bg-white/60 p-4 text-[12px] text-slate-700 backdrop-blur">
-                  <div className="font-semibold text-slate-900">Kurz. Klar. Unverbindlich.</div>
-                  <div className="mt-1 text-slate-600">
-                    Ziel: Klarheit zu Scope, Timeline und Budgetrahmen – ohne Overengineering.
-                  </div>
+                  <div className="font-semibold text-slate-900">{t.shortBoxTitle}</div>
+                  <div className="mt-1 text-slate-600">{t.shortBoxText}</div>
                 </div>
               </div>
             </Card>
@@ -275,29 +378,27 @@ export default function KontaktPage() {
                 <ChatIcon />
               </Bubble>
               <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-slate-900">Was Sie im Erstgespräch bekommen</div>
-                <div className="mt-1 text-[12px] leading-relaxed text-slate-600">
-                  Eine klare technische Empfehlung – pragmatisch, realistisch, übergabefähig.
-                </div>
+                <div className="text-[13px] font-semibold text-slate-900">{t.bottomTitle}</div>
+                <div className="mt-1 text-[12px] leading-relaxed text-slate-600">{t.bottomText}</div>
               </div>
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-2xl border border-slate-900/10 bg-white/60 p-4 text-[12px] text-slate-700 backdrop-blur">
-                <div className="font-semibold text-slate-900">Format</div>
-                <div className="mt-1 text-slate-600">Zoom / Google Meet / Telefon</div>
+                <div className="font-semibold text-slate-900">{t.c1t}</div>
+                <div className="mt-1 text-slate-600">{t.c1v}</div>
               </div>
               <div className="rounded-2xl border border-slate-900/10 bg-white/60 p-4 text-[12px] text-slate-700 backdrop-blur">
-                <div className="font-semibold text-slate-900">Scope</div>
-                <div className="mt-1 text-slate-600">MVP-Schnitt + Muss-Kriterien</div>
+                <div className="font-semibold text-slate-900">{t.c2t}</div>
+                <div className="mt-1 text-slate-600">{t.c2v}</div>
               </div>
               <div className="rounded-2xl border border-slate-900/10 bg-white/60 p-4 text-[12px] text-slate-700 backdrop-blur">
-                <div className="font-semibold text-slate-900">Timeline</div>
-                <div className="mt-1 text-slate-600">Realistische Schritte & Reihenfolge</div>
+                <div className="font-semibold text-slate-900">{t.c3t}</div>
+                <div className="mt-1 text-slate-600">{t.c3v}</div>
               </div>
               <div className="rounded-2xl border border-slate-900/10 bg-white/60 p-4 text-[12px] text-slate-700 backdrop-blur">
-                <div className="font-semibold text-slate-900">Setup</div>
-                <div className="mt-1 text-slate-600">Next.js · Vercel · Supabase</div>
+                <div className="font-semibold text-slate-900">{t.c4t}</div>
+                <div className="mt-1 text-slate-600">{t.c4v}</div>
               </div>
             </div>
           </Card>

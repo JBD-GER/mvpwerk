@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import type { FoerderProgramm } from './page'
 
 function Icon({ name }: { name: 'radar' | 'pin' | 'wallet' | 'spark' | 'shield' | 'rocket' | 'flame' | 'link' }) {
@@ -55,7 +56,15 @@ function Icon({ name }: { name: 'radar' | 'pin' | 'wallet' | 'spark' | 'shield' 
       )
     case 'flame':
       return (
-        <svg viewBox="0 0 24 24" className={cls} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          viewBox="0 0 24 24"
+          className={cls}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M12 22c4 0 7-3 7-7 0-3-2-5-3-6 0 2-1 3-2 4-1-3-3-5-6-7 0 4-3 6-3 10 0 4 3 6 7 6z" />
         </svg>
       )
@@ -85,6 +94,7 @@ function badgeClass(kind: 'Bund' | 'Hessen' | 'Sachsen' | 'NRW' | 'Hamburg') {
 }
 
 function typeBadgeClass(type: string) {
+  // WICHTIG: bleibt 1:1 deine Logik (deine Daten nutzen deutsche Werte)
   switch (type) {
     case 'Zuschuss':
       return 'bg-emerald-500/10 text-emerald-900 ring-emerald-500/20'
@@ -105,7 +115,103 @@ function isHot(p: FoerderProgramm) {
   return (p.tags || []).map((x) => x.toLowerCase()).includes('hot')
 }
 
+type Lang = 'de' | 'en'
+function detectLang(v: string | null): Lang {
+  const s = (v || '').toLowerCase()
+  if (s === 'en' || s.startsWith('en-')) return 'en'
+  return 'de'
+}
+
+function t(lang: Lang) {
+  if (lang === 'en') {
+    return {
+      pill: 'Check funding quickly',
+      h1: 'Funding programs for SaaS, web apps & software',
+      p: 'Filter by region & funding type — and open programs directly in the official funding database.',
+      hotTitle: 'Nationwide & Hot',
+      hotHint: 'Open directly · new tab',
+      searchLabel: 'Search',
+      searchPh: 'e.g. digitization, loan, ZIM, ERDF …',
+      regionLabel: 'Region',
+      typeLabel: 'Funding type',
+      results: 'Results',
+      programs: 'programs',
+      reset: 'Reset filters',
+      open: 'Open ↗',
+      goodFor: 'Typically a fit for',
+      note: 'Note:',
+      bottomPill: 'Optional funding planning',
+      bottomH2: 'If funding is on the table, we plan implementation accordingly.',
+      bottomP:
+        'We’ll briefly discuss your project — and set up scope, approach and documentation so there are no surprises later.',
+      cta1: 'Request funding check',
+      cta2: 'View services',
+      tip: 'Tip: Programs change. This page is a navigator — always verify details in the program link.',
+      all: 'All',
+      region: {
+        Bund: 'Nationwide',
+        Hessen: 'Hesse',
+        Sachsen: 'Saxony',
+        NRW: 'NRW',
+        Hamburg: 'Hamburg',
+      } as const,
+      type: {
+        Zuschuss: 'Grant',
+        Darlehen: 'Loan',
+        Gutschein: 'Voucher',
+        Fonds: 'Fund',
+        Förderaufruf: 'Call',
+      } as const,
+    }
+  }
+
+  return {
+    pill: 'Förderungen schnell checken',
+    h1: 'Förderprogramme für SaaS, Web Apps & Software',
+    p: 'Filtern Sie nach Bundesland & Förderart – und öffnen Sie die Programme direkt in der Förderdatenbank.',
+    hotTitle: 'Bundesweit & Hot',
+    hotHint: 'Direkt öffnen · neuer Tab',
+    searchLabel: 'Suche',
+    searchPh: 'z.B. Digitalisierung, Kredit, ZIM, EFRE …',
+    regionLabel: 'Bundesland',
+    typeLabel: 'Förderart',
+    results: 'Ergebnisse',
+    programs: 'Programme',
+    reset: 'Filter zurücksetzen',
+    open: 'Öffnen ↗',
+    goodFor: 'Typisch passend für',
+    note: 'Hinweis:',
+    bottomPill: 'Förderplanung optional',
+    bottomH2: 'Wenn Förderung im Raum steht, planen wir die Umsetzung entsprechend mit.',
+    bottomP:
+      'Wir sprechen kurz über Ihr Vorhaben – und setzen Scope, Vorgehen und Dokumentation so auf, dass es bei späteren Rückfragen keine Überraschungen gibt.',
+    cta1: 'Förder-Check anfragen',
+    cta2: 'Leistungen ansehen',
+    tip: 'Tipp: Programme ändern sich. Diese Seite ist ein Navigator – Details bitte immer im Programm-Link prüfen.',
+    all: 'Alle',
+    region: {
+      Bund: 'Bund',
+      Hessen: 'Hessen',
+      Sachsen: 'Sachsen',
+      NRW: 'NRW',
+      Hamburg: 'Hamburg',
+    } as const,
+    type: {
+      Zuschuss: 'Zuschuss',
+      Darlehen: 'Darlehen',
+      Gutschein: 'Gutschein',
+      Fonds: 'Fonds',
+      Förderaufruf: 'Förderaufruf',
+    } as const,
+  }
+}
+
 export default function FoerderungCheckerClient({ programmes }: { programmes: FoerderProgramm[] }) {
+  const sp = useSearchParams()
+  const lang = detectLang(sp.get('lang'))
+  const tr = useMemo(() => t(lang), [lang])
+
+  // WICHTIG: State/Filter bleiben exakt wie bei dir (Alle als Sentinel)
   const [q, setQ] = useState('')
   const [region, setRegion] = useState<'Alle' | FoerderProgramm['region']>('Alle')
   const [type, setType] = useState<'Alle' | FoerderProgramm['type']>('Alle')
@@ -114,9 +220,7 @@ export default function FoerderungCheckerClient({ programmes }: { programmes: Fo
   const types = useMemo(() => ['Alle', ...Array.from(new Set(programmes.map((p) => p.type)))] as const, [programmes])
 
   const hotBund = useMemo(() => {
-    return programmes
-      .filter((p) => p.region === 'Bund' && isHot(p))
-      .slice(0, 6)
+    return programmes.filter((p) => p.region === 'Bund' && isHot(p)).slice(0, 6)
   }, [programmes])
 
   const filtered = useMemo(() => {
@@ -126,20 +230,27 @@ export default function FoerderungCheckerClient({ programmes }: { programmes: Fo
       if (type !== 'Alle' && p.type !== type) return false
       if (!query) return true
 
-      const hay = [
-        p.title,
-        p.short,
-        p.region,
-        p.type,
-        ...(p.goodFor || []),
-        ...((p.tags as string[]) || []),
-      ]
+      const hay = [p.title, p.short, p.region, p.type, ...(p.goodFor || []), ...((p.tags as string[]) || [])]
         .join(' ')
         .toLowerCase()
 
       return hay.includes(query)
     })
   }, [programmes, q, region, type])
+
+  // Interne Links behalten lang
+  const hrefWithLang = (href: string) => {
+    if (lang === 'de') return href
+    const [base, hash] = href.split('#')
+    const [path, qs] = base.split('?')
+    const params = new URLSearchParams(qs || '')
+    params.set('lang', lang)
+    const out = `${path}?${params.toString()}`
+    return hash ? `${out}#${hash}` : out
+  }
+
+  const labelRegion = (r: FoerderProgramm['region']) => tr.region[r]
+  const labelType = (x: FoerderProgramm['type']) => tr.type[x]
 
   return (
     <section className="relative overflow-hidden bg-white py-12 sm:py-16 md:py-20">
@@ -153,16 +264,14 @@ export default function FoerderungCheckerClient({ programmes }: { programmes: Fo
         <div className="mx-auto max-w-[980px] text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-slate-900/10 bg-white/80 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500/70" />
-            Förderungen schnell checken
+            {tr.pill}
           </div>
 
           <h1 className="mt-4 text-[28px] font-semibold leading-[1.08] tracking-tight text-slate-900 sm:text-[38px] md:text-[44px]">
-            Förderprogramme für SaaS, Web Apps &amp; Software
+            {tr.h1}
           </h1>
 
-          <p className="mt-3 text-[14px] leading-relaxed text-slate-700 sm:text-[15px]">
-            Filtern Sie nach Bundesland &amp; Förderart – und öffnen Sie die Programme direkt in der Förderdatenbank.
-          </p>
+          <p className="mt-3 text-[14px] leading-relaxed text-slate-700 sm:text-[15px]">{tr.p}</p>
         </div>
 
         {/* Bundesweit & Hot */}
@@ -173,9 +282,9 @@ export default function FoerderungCheckerClient({ programmes }: { programmes: Fo
                 <span className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-900/10 bg-white/90 text-slate-900/70 shadow-sm">
                   <Icon name="flame" />
                 </span>
-                Bundesweit &amp; Hot
+                {tr.hotTitle}
               </div>
-              <div className="text-[11px] text-slate-600">Direkt öffnen · neuer Tab</div>
+              <div className="text-[11px] text-slate-600">{tr.hotHint}</div>
             </div>
 
             {/* mobile: horizontal scroll / desktop: grid */}
@@ -195,14 +304,14 @@ export default function FoerderungCheckerClient({ programmes }: { programmes: Fo
                           <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/80 ring-1 ring-black/5 text-slate-900/70">
                             <Icon name="pin" />
                           </span>
-                          Bund
+                          {labelRegion('Bund')}
                         </span>
 
                         <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ${typeBadgeClass(p.type)}`}>
                           <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/80 ring-1 ring-black/5 text-slate-900/70">
                             <Icon name={p.type === 'Zuschuss' ? 'spark' : p.type === 'Darlehen' ? 'wallet' : p.type === 'Fonds' ? 'rocket' : 'shield'} />
                           </span>
-                          {p.type}
+                          {labelType(p.type)}
                         </span>
 
                         <span className="inline-flex items-center rounded-full bg-amber-500/12 px-2.5 py-1 text-[11px] font-semibold text-amber-900 ring-1 ring-amber-500/25">
@@ -229,7 +338,7 @@ export default function FoerderungCheckerClient({ programmes }: { programmes: Fo
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             {/* Search */}
             <div className="flex-1">
-              <label className="mb-1 block text-[11px] font-medium text-slate-600">Suche</label>
+              <label className="mb-1 block text-[11px] font-medium text-slate-600">{tr.searchLabel}</label>
               <div className="flex items-center gap-2 rounded-2xl border border-slate-900/10 bg-white/80 px-3 py-2 shadow-sm backdrop-blur">
                 <span className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-900/10 bg-white/90 text-slate-900/70">
                   <Icon name="radar" />
@@ -237,7 +346,7 @@ export default function FoerderungCheckerClient({ programmes }: { programmes: Fo
                 <input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="z.B. Digitalisierung, Kredit, ZIM, EFRE …"
+                  placeholder={tr.searchPh}
                   className="w-full bg-transparent text-[13px] text-slate-900 placeholder:text-slate-500 focus:outline-none"
                 />
               </div>
@@ -246,7 +355,7 @@ export default function FoerderungCheckerClient({ programmes }: { programmes: Fo
             {/* Filters */}
             <div className="grid gap-3 sm:grid-cols-2 md:w-[420px]">
               <div>
-                <label className="mb-1 block text-[11px] font-medium text-slate-600">Bundesland</label>
+                <label className="mb-1 block text-[11px] font-medium text-slate-600">{tr.regionLabel}</label>
                 <div className="rounded-2xl border border-slate-900/10 bg-white/80 px-3 py-2 shadow-sm backdrop-blur">
                   <select
                     value={region}
@@ -255,7 +364,7 @@ export default function FoerderungCheckerClient({ programmes }: { programmes: Fo
                   >
                     {regions.map((r) => (
                       <option key={r} value={r}>
-                        {r}
+                        {r === 'Alle' ? tr.all : labelRegion(r as FoerderProgramm['region'])}
                       </option>
                     ))}
                   </select>
@@ -263,16 +372,16 @@ export default function FoerderungCheckerClient({ programmes }: { programmes: Fo
               </div>
 
               <div>
-                <label className="mb-1 block text-[11px] font-medium text-slate-600">Förderart</label>
+                <label className="mb-1 block text-[11px] font-medium text-slate-600">{tr.typeLabel}</label>
                 <div className="rounded-2xl border border-slate-900/10 bg-white/80 px-3 py-2 shadow-sm backdrop-blur">
                   <select
                     value={type}
                     onChange={(e) => setType(e.target.value as any)}
                     className="w-full bg-transparent text-[13px] text-slate-900 focus:outline-none"
                   >
-                    {types.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
+                    {types.map((x) => (
+                      <option key={x} value={x}>
+                        {x === 'Alle' ? tr.all : labelType(x as FoerderProgramm['type'])}
                       </option>
                     ))}
                   </select>
@@ -283,7 +392,7 @@ export default function FoerderungCheckerClient({ programmes }: { programmes: Fo
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
             <div className="text-[11px] text-slate-600">
-              Ergebnisse: <span className="font-semibold text-slate-900">{filtered.length}</span> Programme
+              {tr.results}: <span className="font-semibold text-slate-900">{filtered.length}</span> {tr.programs}
             </div>
 
             <button
@@ -294,7 +403,7 @@ export default function FoerderungCheckerClient({ programmes }: { programmes: Fo
               }}
               className="inline-flex h-9 items-center justify-center rounded-2xl border border-slate-900/10 bg-white/70 px-4 text-[12px] font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
             >
-              Filter zurücksetzen
+              {tr.reset}
             </button>
           </div>
         </div>
@@ -310,14 +419,26 @@ export default function FoerderungCheckerClient({ programmes }: { programmes: Fo
                       <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/80 ring-1 ring-black/5 text-slate-900/70">
                         <Icon name="pin" />
                       </span>
-                      {p.region}
+                      {labelRegion(p.region)}
                     </span>
 
                     <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ${typeBadgeClass(p.type)}`}>
                       <span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/80 ring-1 ring-black/5 text-slate-900/70">
-                        <Icon name={p.type === 'Zuschuss' ? 'spark' : p.type === 'Darlehen' ? 'wallet' : p.type === 'Fonds' ? 'rocket' : p.type === 'Förderaufruf' ? 'shield' : 'shield'} />
+                        <Icon
+                          name={
+                            p.type === 'Zuschuss'
+                              ? 'spark'
+                              : p.type === 'Darlehen'
+                                ? 'wallet'
+                                : p.type === 'Fonds'
+                                  ? 'rocket'
+                                  : p.type === 'Förderaufruf'
+                                    ? 'shield'
+                                    : 'shield'
+                          }
+                        />
                       </span>
-                      {p.type}
+                      {labelType(p.type)}
                     </span>
 
                     {isHot(p) ? (
@@ -336,14 +457,14 @@ export default function FoerderungCheckerClient({ programmes }: { programmes: Fo
                   rel="noopener noreferrer"
                   className="inline-flex h-10 shrink-0 items-center justify-center rounded-2xl bg-slate-900 px-4 text-[12px] font-semibold text-white shadow-[0_18px_55px_rgba(15,23,42,0.18)] transition hover:translate-y-[-1px] hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/20"
                 >
-                  Öffnen ↗
+                  {tr.open}
                 </a>
               </div>
 
               <p className="mt-3 text-[12px] leading-relaxed text-slate-700">{p.short}</p>
 
               <div className="mt-4">
-                <div className="text-[11px] font-medium text-slate-600">Typisch passend für</div>
+                <div className="text-[11px] font-medium text-slate-600">{tr.goodFor}</div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {p.goodFor.slice(0, 4).map((g) => (
                     <span
@@ -358,7 +479,7 @@ export default function FoerderungCheckerClient({ programmes }: { programmes: Fo
 
               {p.hint ? (
                 <div className="mt-4 rounded-2xl border border-slate-900/10 bg-white/80 px-4 py-3 text-[11px] text-slate-700 shadow-sm">
-                  <span className="font-semibold text-slate-900">Hinweis:</span> {p.hint}
+                  <span className="font-semibold text-slate-900">{tr.note}</span> {p.hint}
                 </div>
               ) : null}
             </div>
@@ -370,38 +491,33 @@ export default function FoerderungCheckerClient({ programmes }: { programmes: Fo
           <div className="mx-auto max-w-[920px]">
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-900/10 bg-white/80 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500/70" />
-              Förderplanung optional
+              {tr.bottomPill}
             </div>
 
             <h2 className="mt-4 text-[22px] font-semibold leading-tight text-slate-900 sm:text-[28px]">
-              Wenn Förderung im Raum steht, planen wir die Umsetzung entsprechend mit.
+              {tr.bottomH2}
             </h2>
 
-            <p className="mt-3 text-[13px] leading-relaxed text-slate-700 sm:text-[14px]">
-              Wir sprechen kurz über Ihr Vorhaben – und setzen Scope, Vorgehen und Dokumentation so auf,
-              dass es bei späteren Rückfragen keine Überraschungen gibt.
-            </p>
+            <p className="mt-3 text-[13px] leading-relaxed text-slate-700 sm:text-[14px]">{tr.bottomP}</p>
 
             <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
-                href="/kontakt"
+                href={hrefWithLang('/kontakt')}
                 className="group inline-flex h-12 w-full items-center justify-center rounded-2xl bg-slate-900 px-6 text-sm font-semibold text-white shadow-[0_18px_55px_rgba(15,23,42,0.18)] transition hover:translate-y-[-1px] hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/20 sm:w-auto"
               >
-                Förder-Check anfragen
+                {tr.cta1}
                 <span className="ml-2 inline-block transition group-hover:translate-x-0.5">→</span>
               </Link>
 
               <Link
-                href="/leistungen"
+                href={hrefWithLang('/leistungen')}
                 className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-slate-900/10 bg-white/70 px-6 text-sm font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 sm:w-auto"
               >
-                Leistungen ansehen
+                {tr.cta2}
               </Link>
             </div>
 
-            <div className="mt-3 text-[11px] text-slate-600">
-              Tipp: Programme ändern sich. Diese Seite ist ein Navigator – Details bitte immer im Programm-Link prüfen.
-            </div>
+            <div className="mt-3 text-[11px] text-slate-600">{tr.tip}</div>
           </div>
         </div>
       </div>

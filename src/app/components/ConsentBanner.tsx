@@ -5,10 +5,83 @@ import Link from 'next/link'
 import { readConsent, writeConsent } from '@/lib/consent'
 
 type Mode = 'banner' | 'settings'
+type Lang = 'de' | 'en'
 
 const DEFAULTS = {
   analytics: false,
   marketing: false,
+}
+
+const T = {
+  de: {
+    aria: 'Cookie-Einwilligung',
+    badge: 'Cookie-Einwilligung',
+    title: 'Wir verwenden Cookies & ähnliche Technologien',
+    text:
+      'Notwendige Cookies sind für den Betrieb der Website erforderlich. Optional nutzen wir Statistik (z. B. Google Analytics) und ggf. Marketing, um Reichweite und Conversions zu messen. Sie können Ihre Auswahl jederzeit ändern.',
+    current: 'Aktuell:',
+    privacy: 'Datenschutz',
+    acceptAll: 'Alle akzeptieren',
+    rejectAll: 'Ablehnen',
+    settings: 'Einstellungen',
+    save: 'Auswahl speichern',
+    back: 'Zurück',
+    footer: 'Kein Spam · unverbindlich · ',
+    made: 'Made in Germany',
+    // summary + toggles
+    necessary: 'Notwendig',
+    analytics: 'Statistik',
+    marketing: 'Marketing',
+    nDesc: 'Betrieb & Sicherheit.',
+    aDesc: 'Nutzung messen.',
+    mDesc: 'Kampagnen messen.',
+  },
+  en: {
+    aria: 'Cookie consent',
+    badge: 'Cookie consent',
+    title: 'We use cookies & similar technologies',
+    text:
+      'Necessary cookies are required to operate this website. Optionally, we use analytics (e.g., Google Analytics) and marketing to measure reach and conversions. You can change your choice at any time.',
+    current: 'Current:',
+    privacy: 'Privacy policy',
+    acceptAll: 'Accept all',
+    rejectAll: 'Reject',
+    settings: 'Settings',
+    save: 'Save selection',
+    back: 'Back',
+    footer: 'No spam · non-binding · ',
+    made: 'Made in Germany',
+    // summary + toggles
+    necessary: 'Necessary',
+    analytics: 'Analytics',
+    marketing: 'Marketing',
+    nDesc: 'Operation & security.',
+    aDesc: 'Measure usage.',
+    mDesc: 'Measure campaigns.',
+  },
+} as const
+
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null
+  const m = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`))
+  return m ? decodeURIComponent(m[1]) : null
+}
+
+function getLangClient(): Lang {
+  if (typeof window === 'undefined') return 'de'
+
+  // 1) URL ?lang=
+  const sp = new URLSearchParams(window.location.search)
+  const q = sp.get('lang')
+  if (q === 'de' || q === 'en') return q
+
+  // 2) Cookie von Middleware
+  const c = getCookie('mvpwerk_lang')
+  if (c === 'de' || c === 'en') return c
+
+  // 3) Browser language
+  const nav = (navigator.languages?.[0] || navigator.language || '').toLowerCase()
+  return nav.startsWith('de') ? 'de' : 'en'
 }
 
 export default function ConsentBanner() {
@@ -18,9 +91,20 @@ export default function ConsentBanner() {
   const [analytics, setAnalytics] = useState(DEFAULTS.analytics)
   const [marketing, setMarketing] = useState(DEFAULTS.marketing)
 
+  const [lang, setLang] = useState<Lang>('de')
+  const t = T[lang]
+
+  // initial language (und bei back/forward etc. stabil)
+  useEffect(() => {
+    setLang(getLangClient())
+  }, [])
+
   // open via global event (footer)
   useEffect(() => {
     const onOpen = () => {
+      // Sprache beim Öffnen nochmal ziehen (falls URL/Cookie gewechselt)
+      setLang(getLangClient())
+
       const current = readConsent()
       setAnalytics(current?.analytics ?? DEFAULTS.analytics)
       setMarketing(current?.marketing ?? DEFAULTS.marketing)
@@ -31,7 +115,7 @@ export default function ConsentBanner() {
     return () => window.removeEventListener('mvpwerk:open-consent', onOpen)
   }, [])
 
-  // initial
+  // initial open (wenn noch nichts gesetzt)
   useEffect(() => {
     const current = readConsent()
     if (!current) {
@@ -51,12 +135,13 @@ export default function ConsentBanner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
-  const summary = useMemo(() => {
-    const parts = ['Notwendig']
-    if (analytics) parts.push('Statistik')
-    if (marketing) parts.push('Marketing')
-    return parts.join(' · ')
-  }, [analytics, marketing])
+const summary = useMemo(() => {
+  const parts: string[] = [t.necessary] // ✅ TS: jetzt dürfen alle Strings rein
+  if (analytics) parts.push(t.analytics)
+  if (marketing) parts.push(t.marketing)
+  return parts.join(' · ')
+}, [analytics, marketing, t])
+
 
   function close() {
     setOpen(false)
@@ -82,13 +167,10 @@ export default function ConsentBanner() {
 
   return (
     <div
-      className={[
-        'fixed inset-0 z-[80]',
-        'flex items-end justify-center p-4 sm:p-6',
-      ].join(' ')}
+      className={['fixed inset-0 z-[80]', 'flex items-end justify-center p-4 sm:p-6'].join(' ')}
       role="dialog"
       aria-modal="true"
-      aria-label="Cookie-Einwilligung"
+      aria-label={t.aria}
     >
       {/* Backdrop (blockt Scroll/Touch ohne Body-Fixes) */}
       <div
@@ -116,24 +198,22 @@ export default function ConsentBanner() {
             {/* badge */}
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-900/10 bg-white/75 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500/70" />
-              Cookie-Einwilligung
+              {t.badge}
             </div>
 
             <div className="mt-3">
               <div className="text-[18px] font-semibold tracking-tight text-slate-900 sm:text-[20px]">
-                Wir verwenden Cookies &amp; ähnliche Technologien
+                {t.title}
               </div>
 
               <p className="mt-2 max-w-[980px] text-[12px] leading-relaxed text-slate-700 sm:text-[13px]">
-                Notwendige Cookies sind für den Betrieb der Website erforderlich. Optional nutzen wir Statistik (z.&nbsp;B.
-                Google Analytics) und ggf. Marketing, um Reichweite und Conversions zu messen. Sie können Ihre Auswahl
-                jederzeit ändern.
+                {t.text}
               </p>
 
               <div className="mt-2 text-[11px] text-slate-600">
-                Aktuell: <span className="font-medium text-slate-900">{summary}</span> ·{' '}
+                {t.current} <span className="font-medium text-slate-900">{summary}</span> ·{' '}
                 <Link href="/datenschutz" className="font-medium text-slate-900 underline underline-offset-2">
-                  Datenschutz
+                  {t.privacy}
                 </Link>
               </div>
             </div>
@@ -149,40 +229,30 @@ export default function ConsentBanner() {
                     'hover:bg-white hover:translate-y-[-1px] focus:outline-none focus:ring-2 focus:ring-slate-900/10',
                   ].join(' ')}
                 >
-                  Alle akzeptieren
+                  {t.acceptAll}
                 </button>
 
                 <button
                   onClick={rejectAll}
                   className="inline-flex h-11 w-full items-center justify-center rounded-2xl border border-slate-900/10 bg-white/75 px-4 text-[12px] font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 sm:w-auto"
                 >
-                  Ablehnen
+                  {t.rejectAll}
                 </button>
 
                 <button
                   onClick={() => setMode('settings')}
                   className="inline-flex h-11 w-full items-center justify-center rounded-2xl border border-slate-900/10 bg-white/75 px-4 text-[12px] font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 sm:w-auto"
                 >
-                  Einstellungen
+                  {t.settings}
                 </button>
               </div>
             ) : (
               <>
                 {/* Settings area (compact) */}
                 <div className="mt-4 grid gap-2 sm:grid-cols-3">
-                  <ToggleRow title="Notwendig" description="Betrieb & Sicherheit." enabled locked />
-                  <ToggleRow
-                    title="Statistik"
-                    description="Nutzung messen."
-                    enabled={analytics}
-                    onChange={setAnalytics}
-                  />
-                  <ToggleRow
-                    title="Marketing"
-                    description="Kampagnen messen."
-                    enabled={marketing}
-                    onChange={setMarketing}
-                  />
+                  <ToggleRow title={t.necessary} description={t.nDesc} enabled locked />
+                  <ToggleRow title={t.analytics} description={t.aDesc} enabled={analytics} onChange={setAnalytics} />
+                  <ToggleRow title={t.marketing} description={t.mDesc} enabled={marketing} onChange={setMarketing} />
                 </div>
 
                 {/* Buttons settings — LINKS bündig */}
@@ -195,21 +265,22 @@ export default function ConsentBanner() {
                       'hover:bg-white hover:translate-y-[-1px] focus:outline-none focus:ring-2 focus:ring-slate-900/10',
                     ].join(' ')}
                   >
-                    Auswahl speichern
+                    {t.save}
                   </button>
 
                   <button
                     onClick={() => setMode('banner')}
                     className="inline-flex h-11 w-full items-center justify-center rounded-2xl border border-slate-900/10 bg-white/75 px-4 text-[12px] font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 sm:w-auto"
                   >
-                    Zurück
+                    {t.back}
                   </button>
                 </div>
               </>
             )}
 
             <div className="mt-3 text-[11px] text-slate-600">
-              Kein Spam · unverbindlich · <span className="font-medium text-slate-900">Made in Germany</span>
+              {t.footer}
+              <span className="font-medium text-slate-900">{t.made}</span>
             </div>
           </div>
 
@@ -277,7 +348,7 @@ function ToggleRow({
             enabled ? 'border-slate-900/10 bg-emerald-500/60' : 'border-slate-900/10 bg-white/70',
           ].join(' ')}
           aria-pressed={enabled}
-          aria-label={`${title} ${enabled ? 'aktiv' : 'inaktiv'}`}
+          aria-label={`${title} ${enabled ? 'active' : 'inactive'}`}
         >
           <span
             className={[

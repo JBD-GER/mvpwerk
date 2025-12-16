@@ -2,8 +2,60 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { useMemo } from 'react'
+import { useSearchParams } from 'next/navigation'
+
+type Lang = 'de' | 'en'
 
 export default function GlobalCTA() {
+  const searchParams = useSearchParams()
+  const lang = ((searchParams?.get('lang') as Lang) || 'de') satisfies Lang
+
+  const t = useMemo(() => {
+    return {
+      de: {
+        pill: 'Kampagnen-ready · schnell live · wartbar',
+        h2: 'SaaS, Software oder Web App bauen lassen – ohne Reibung.',
+        p:
+          'Sie bekommen eine saubere Umsetzung mit Next.js/React – inklusive klarer Roadmap, wöchentlicher Demos und' +
+          ' einem Setup, das sofort skalieren kann.',
+        cards: [
+          { t: 'Fixer Ablauf', d: 'Kickoff → MVP → Live → Iteration' },
+          { t: 'Transparenz', d: '1×/Woche Demo + klare Milestones' },
+          { t: 'Ownership', d: 'Der Code gehört Ihnen' },
+          { t: 'Performance', d: 'Schnell, clean, Lighthouse-ready' },
+        ],
+        rightTitle: 'Kostenlose Ersteinschätzung',
+        rightSub: 'Antwort meist am selben Tag',
+        boxTitle: 'In 30 Minuten klären wir:',
+        bullets: ['• Was Sie wirklich brauchen (und was nicht)', '• Wie Sie schnell live gehen', '• Was es kostet & wann es steht'],
+        cta: 'Projekt anfragen',
+        foot: 'Kein Spam · unverbindlich · ',
+        made: 'Made in Germany',
+      },
+      en: {
+        pill: 'Campaign-ready · live fast · maintainable',
+        h2: 'Build your SaaS, software, or web app — without friction.',
+        p:
+          'You get a clean Next.js/React implementation — with a clear roadmap, weekly demos and' +
+          ' a setup that can scale from day one.',
+        cards: [
+          { t: 'Clear process', d: 'Kickoff → MVP → Live → Iteration' },
+          { t: 'Transparency', d: 'Weekly demo + clear milestones' },
+          { t: 'Ownership', d: 'You own the code' },
+          { t: 'Performance', d: 'Fast, clean, Lighthouse-ready' },
+        ],
+        rightTitle: 'Free first assessment',
+        rightSub: 'Usually same-day reply',
+        boxTitle: 'In 30 minutes we clarify:',
+        bullets: ['• What you actually need (and what you don’t)', '• How to go live fast', '• Cost & realistic timeline'],
+        cta: 'Request a project',
+        foot: 'No spam · no obligation · ',
+        made: 'Made in Germany',
+      },
+    }[lang]
+  }, [lang])
+
   return (
     <section className="relative overflow-hidden bg-white">
       {/* Background (wie Hero) */}
@@ -42,25 +94,19 @@ export default function GlobalCTA() {
             <div className="lg:col-span-7">
               <div className="inline-flex items-center gap-2 rounded-full border border-slate-900/10 bg-white/70 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur">
                 <span className="inline-block h-2 w-2 rounded-full bg-emerald-500/70" />
-                Kampagnen-ready · schnell live · wartbar
+                {t.pill}
               </div>
 
               <h2 className="mt-4 text-[26px] font-semibold leading-[1.08] tracking-tight text-slate-900 sm:text-[34px]">
-                SaaS, Software oder Web App bauen lassen – ohne Reibung.
+                {t.h2}
               </h2>
 
               <p className="mt-3 max-w-2xl text-[14px] leading-relaxed text-slate-700 sm:text-[15px]">
-                Sie bekommen eine saubere Umsetzung mit Next.js/React – inklusive klarer Roadmap, wöchentlicher Demos und
-                einem Setup, das sofort skalieren kann.
+                {t.p}
               </p>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                {[
-                  { t: 'Fixer Ablauf', d: 'Kickoff → MVP → Live → Iteration' },
-                  { t: 'Transparenz', d: '1×/Woche Demo + klare Milestones' },
-                  { t: 'Ownership', d: 'Der Code gehört Ihnen' },
-                  { t: 'Performance', d: 'Schnell, clean, Lighthouse-ready' },
-                ].map((x) => (
+                {t.cards.map((x) => (
                   <div
                     key={x.t}
                     className="rounded-2xl border border-slate-900/10 bg-white/70 px-4 py-3 shadow-sm backdrop-blur"
@@ -84,29 +130,23 @@ export default function GlobalCTA() {
                 <div className="relative flex items-center gap-3">
                   <div className="relative">
                     <div className="mvpwerk-cta-float relative grid h-12 w-12 place-items-center rounded-2xl border border-slate-900/10 bg-white/80 shadow-sm">
-                      <Image
-                        src="/logos/mvpwerk_favi.png"
-                        alt="MVPWERK"
-                        width={28}
-                        height={28}
-                        className="h-7 w-7"
-                      />
+                      <Image src="/logos/mvpwerk_favi.png" alt="MVPWERK" width={28} height={28} className="h-7 w-7" />
                     </div>
                     <div className="pointer-events-none absolute -inset-3 rounded-[22px] bg-slate-900/10 blur-xl" />
                   </div>
 
                   <div className="min-w-0">
-                    <div className="text-[12px] font-semibold text-slate-900">Kostenlose Ersteinschätzung</div>
-                    <div className="text-[11px] text-slate-600">Antwort meist am selben Tag</div>
+                    <div className="text-[12px] font-semibold text-slate-900">{t.rightTitle}</div>
+                    <div className="text-[11px] text-slate-600">{t.rightSub}</div>
                   </div>
                 </div>
 
                 <div className="mt-4 rounded-2xl border border-slate-900/10 bg-white/70 p-4 shadow-sm">
-                  <div className="text-[12px] font-semibold text-slate-900">In 30 Minuten klären wir:</div>
+                  <div className="text-[12px] font-semibold text-slate-900">{t.boxTitle}</div>
                   <ul className="mt-2 space-y-1.5 text-[11px] leading-relaxed text-slate-700">
-                    <li>• Was Sie wirklich brauchen (und was nicht)</li>
-                    <li>• Wie Sie schnell live gehen</li>
-                    <li>• Was es kostet &amp; wann es steht</li>
+                    {t.bullets.map((b) => (
+                      <li key={b}>{b}</li>
+                    ))}
                   </ul>
                 </div>
 
@@ -116,13 +156,14 @@ export default function GlobalCTA() {
                     href="/kontakt"
                     className="group inline-flex h-12 w-full items-center justify-center rounded-2xl bg-slate-900 px-6 text-sm font-semibold text-white shadow-[0_18px_55px_rgba(15,23,42,0.22)] transition hover:translate-y-[-1px] hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/20"
                   >
-                    Projekt anfragen
+                    {t.cta}
                     <span className="ml-2 inline-block transition group-hover:translate-x-0.5">→</span>
                   </Link>
                 </div>
 
                 <div className="mt-4 text-[11px] text-slate-600">
-                  Kein Spam · unverbindlich · <span className="font-medium text-slate-900">Made in Germany</span>
+                  {t.foot}
+                  <span className="font-medium text-slate-900">{t.made}</span>
                 </div>
               </div>
             </div>

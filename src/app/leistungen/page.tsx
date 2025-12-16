@@ -1,118 +1,173 @@
 // src/app/leistungen/page.tsx
 import type { Metadata } from 'next'
+import type { ReactNode } from 'react'
 import Link from 'next/link'
 import LeistungenClient from './LeistungenClient'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mvpwerk.de'
+type Lang = 'de' | 'en'
 
-export const metadata: Metadata = {
-  title: 'Leistungen – MVPWERK',
-  description:
-    'Alle Leistungen von MVPWERK: Beratung, UI/UX, Full-Stack Entwicklung (Frontend/Backend/API), Datenbank (Supabase/Postgres), Auth (Login, Rollen, Google OAuth), KI-Integrationen, Tracking (GTM/GA4/Google Ads), Search Console, E-Mail-Automationen, Deployment (Vercel) und Wartung.',
-  alternates: { canonical: '/leistungen' },
-  openGraph: {
-    type: 'website',
-    url: `${SITE_URL}/leistungen`,
-    title: 'Leistungen – MVPWERK',
-    description:
-      'Beratung, UI/UX, Full-Stack, KI-Integration, Tracking (GTM/GA4), Auth, Deployment – strukturiert nach Phasen.',
-    images: [
-      {
-        // Lege diese Datei an (1200x630): /public/og/leistungen.png
-        url: `${SITE_URL}/og/leistungen.png`,
-        width: 1200,
-        height: 630,
-        alt: 'Leistungen – MVPWERK',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Leistungen – MVPWERK',
-    description:
-      'Beratung, UI/UX, Full-Stack, KI, Tracking (GTM/GA4), Auth, Deployment – alles in Phasen.',
-    images: [`${SITE_URL}/og/leistungen.png`],
-  },
-  robots: { index: true, follow: true },
+function normalizeLang(v: unknown): Lang | null {
+  if (!v) return null
+  const s = Array.isArray(v) ? String(v[0] ?? '') : String(v)
+  const x = s.toLowerCase()
+  if (x === 'de' || x.startsWith('de-')) return 'de'
+  if (x === 'en' || x.startsWith('en-')) return 'en'
+  return null
 }
 
-const OVERVIEW = [
-  {
-    title: 'Software in 4–8 Wochen live',
-    desc: 'Schnell eine nutzbare Version, die Sie vorführen, verkaufen und testen können.',
-    icon: (
-      <svg viewBox="0 0 24 24" className="h-[16px] w-[16px]" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M12 8v5l3 2" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M12 3a9 9 0 1 0 9 9" opacity="0.55" />
-      </svg>
-    ),
-  },
-  {
-    title: 'UI/UX-Design, das Vertrauen erzeugt',
-    desc: 'Klare Oberfläche, saubere Nutzerführung und ein „fertiges“ Produktgefühl.',
-    icon: (
-      <svg viewBox="0 0 24 24" className="h-[16px] w-[16px]" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M4 6h16v12H4z" />
-        <path d="M7 9h6" strokeLinecap="round" />
-        <path d="M7 13h10" strokeLinecap="round" opacity="0.65" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Entwicklung: Frontend, Backend & Integrationen',
-    desc: 'Komplette Logik: Datenbank, Schnittstellen, Anbindungen an bestehende Systeme.',
-    icon: (
-      <svg viewBox="0 0 24 24" className="h-[16px] w-[16px]" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M8 9l-3 3 3 3" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M16 9l3 3-3 3" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M13 7l-2 10" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
-      </svg>
-    ),
-  },
-  {
-    title: 'SaaS, Web App oder PWA',
-    desc: 'Je nach Ziel: Web App, SaaS-Produkt oder Progressive Web App (mobil nutzbar).',
-    icon: (
-      <svg viewBox="0 0 24 24" className="h-[16px] w-[16px]" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M7 7h10M7 12h10M7 17h7" strokeLinecap="round" />
-        <path d="M6 3h12a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" opacity="0.45" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Qualitätssicherung & Testing',
-    desc: 'Flows, Rechte, Edge-Cases – stabil, nicht „crasht beim ersten Kunden“.',
-    icon: (
-      <svg viewBox="0 0 24 24" className="h-[16px] w-[16px]" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M12 3l8 4v6c0 5-3 8-8 8s-8-3-8-8V7l8-4z" />
-        <path d="M9 12l2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Launch, Betrieb & Weiterentwicklung',
-    desc: 'Go-live, Updates, Monitoring & Support – damit die Software nicht „stehen bleibt“.',
-    icon: (
-      <svg viewBox="0 0 24 24" className="h-[16px] w-[16px]" fill="none" stroke="currentColor" strokeWidth="2">
-        <path
-          d="M14 4c3.5 0 6 2.5 6 6 0 2.5-1.5 5.5-4.5 8.5l-4 4c-2-1-3.5-2.5-4.5-4.5l4-4C8.5 9.5 11.5 8 14 8V4z"
-          opacity="0.55"
-        />
-        <path d="M14 4c3.5 0 6 2.5 6 6 0 2.5-1.5 5.5-4.5 8.5l-4 4c-2-1-3.5-2.5-4.5-4.5l4-4C8.5 9.5 11.5 8 14 8V4z" />
-        <path d="M10 14l-3 1 1-3" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M15 9h.01" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-] as const
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mvpwerk.de'
 
-function Card({
-  children,
-  className = '',
+function getT(lang: Lang) {
+  if (lang === 'en') {
+    return {
+      metaTitle: 'Services – MVPWERK',
+      metaDescription:
+        'All MVPWERK services: consulting, UI/UX, full-stack development (frontend/backend/API), database (Supabase/Postgres), auth (login, roles, Google OAuth), AI integrations, tracking (GTM/GA4/Google Ads), Search Console, email automations, deployment (Vercel) and maintenance.',
+      ogDescription:
+        'Consulting, UI/UX, full-stack, AI integration, tracking (GTM/GA4), auth, deployment – structured by phases.',
+      twitterDescription:
+        'Consulting, UI/UX, full-stack, AI, tracking (GTM/GA4), auth, deployment – everything in phases.',
+      jsonLdName: 'Services – MVPWERK',
+      jsonLdDesc:
+        'MVPWERK services: consulting, UI/UX, full-stack development, auth, AI integrations, tracking, SEO and deployment.',
+      badge: 'Services · structured by phases',
+      h1: 'Everything modern software needs – in one place.',
+      intro:
+        'From scope & UI/UX to full-stack, AI, auth, tracking & go-live – built so you can pick exactly the modules you need without a text wall.',
+      cta: 'Request a project',
+      ctaSub: 'No obligation · reply usually same day',
+      shortTitle: 'Quick overview',
+      shortSub: 'Below: filter + search (e.g. AI, OAuth, GTM, GA4, API)',
+      rightHint: 'Product feel: clean, fast, hand-off ready.',
+      perfTitle: 'Performance you can measure',
+      perfSub: 'Core Web Vitals & Lighthouse – 10 second comparison.',
+      analyzeUs: 'Analyze MVPWERK',
+      analyzeComp: 'Analyze competitor ↗',
+      newTab: 'Opens in new tab',
+      overview: [
+        {
+          title: 'Software live in 4–8 weeks',
+          desc: 'A usable version fast – ready to demo, sell and test.',
+        },
+        {
+          title: 'UI/UX that builds trust',
+          desc: 'Clear UI, clean guidance and a “finished product” feel.',
+        },
+        {
+          title: 'Development: frontend, backend & integrations',
+          desc: 'Full logic: database, APIs and connections to existing systems.',
+        },
+        {
+          title: 'SaaS, web app or PWA',
+          desc: 'Depending on the goal: SaaS product, web app or PWA (mobile-ready).',
+        },
+        {
+          title: 'Quality assurance & testing',
+          desc: 'Flows, permissions, edge cases – stable, not “crashing at first customer”.',
+        },
+        {
+          title: 'Launch, operations & iteration',
+          desc: 'Go-live, updates, monitoring & support – so the software won’t stall.',
+        },
+      ],
+    }
+  }
+
+  // DE
+  return {
+    metaTitle: 'Leistungen – MVPWERK',
+    metaDescription:
+      'Alle Leistungen von MVPWERK: Beratung, UI/UX, Full-Stack Entwicklung (Frontend/Backend/API), Datenbank (Supabase/Postgres), Auth (Login, Rollen, Google OAuth), KI-Integrationen, Tracking (GTM/GA4/Google Ads), Search Console, E-Mail-Automationen, Deployment (Vercel) und Wartung.',
+    ogDescription:
+      'Beratung, UI/UX, Full-Stack, KI-Integration, Tracking (GTM/GA4), Auth, Deployment – strukturiert nach Phasen.',
+    twitterDescription:
+      'Beratung, UI/UX, Full-Stack, KI, Tracking (GTM/GA4), Auth, Deployment – alles in Phasen.',
+    jsonLdName: 'Leistungen – MVPWERK',
+    jsonLdDesc:
+      'Leistungen von MVPWERK: Beratung, UI/UX, Full-Stack Entwicklung, Auth, KI-Integrationen, Tracking, SEO und Deployment.',
+    badge: 'Leistungen · strukturiert nach Phasen',
+    h1: 'Alles drin, was moderne Software braucht.',
+    intro:
+      'Von Scope & UI/UX über Full-Stack bis KI, Auth, Tracking & Go-Live – so aufgebaut, dass Sie sich einzelne Bausteine gezielt rauspicken können, ohne Text-Wand.',
+    cta: 'Projekt anfragen',
+    ctaSub: 'Unverbindlich · Antwort meist am selben Tag',
+    shortTitle: 'Kurz-Überblick',
+    shortSub:
+      'Weiter unten: Filter + Suche (z. B. KI, OAuth, GTM, GA4, API)',
+    rightHint: 'Produktgefühl: clean, schnell, übergabefähig.',
+    perfTitle: 'Performance, die man messen kann',
+    perfSub: 'Core Web Vitals & Lighthouse – 10 Sekunden Vergleich.',
+    analyzeUs: 'MVPWERK analysieren',
+    analyzeComp: 'Konkurrenz analysieren ↗',
+    newTab: 'Neuer Tab',
+    overview: [
+      {
+        title: 'Software in 4–8 Wochen live',
+        desc: 'Schnell eine nutzbare Version, die Sie vorführen, verkaufen und testen können.',
+      },
+      {
+        title: 'UI/UX-Design, das Vertrauen erzeugt',
+        desc: 'Klare Oberfläche, saubere Nutzerführung und ein „fertiges“ Produktgefühl.',
+      },
+      {
+        title: 'Entwicklung: Frontend, Backend & Integrationen',
+        desc: 'Komplette Logik: Datenbank, Schnittstellen, Anbindungen an bestehende Systeme.',
+      },
+      {
+        title: 'SaaS, Web App oder PWA',
+        desc: 'Je nach Ziel: Web App, SaaS-Produkt oder Progressive Web App (mobil nutzbar).',
+      },
+      {
+        title: 'Qualitätssicherung & Testing',
+        desc: 'Flows, Rechte, Edge-Cases – stabil, nicht „crasht beim ersten Kunden“.'
+      },
+      {
+        title: 'Launch, Betrieb & Weiterentwicklung',
+        desc: 'Go-live, Updates, Monitoring & Support – damit die Software nicht „stehen bleibt“.'
+      },
+    ],
+  }
+}
+
+export async function generateMetadata({
+  searchParams,
 }: {
-  children: React.ReactNode
-  className?: string
-}) {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}): Promise<Metadata> {
+  const sp = await searchParams
+  const lang = normalizeLang(sp?.lang) ?? 'de'
+  const t = getT(lang)
+
+  return {
+    title: t.metaTitle,
+    description: t.metaDescription,
+    alternates: { canonical: '/leistungen' },
+    openGraph: {
+      type: 'website',
+      url: `${SITE_URL}/leistungen`,
+      title: t.metaTitle,
+      description: t.ogDescription,
+      images: [
+        {
+          // Lege diese Datei an (1200x630): /public/og/leistungen.png
+          url: `${SITE_URL}/og/leistungen.png`,
+          width: 1200,
+          height: 630,
+          alt: t.metaTitle,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t.metaTitle,
+      description: t.twitterDescription,
+      images: [`${SITE_URL}/og/leistungen.png`],
+    },
+    robots: { index: true, follow: true },
+  }
+}
+
+function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <div
       className={[
@@ -126,15 +181,30 @@ function Card({
   )
 }
 
-export default function LeistungenPage() {
+export default async function LeistungenPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const sp = await searchParams
+  const lang = normalizeLang(sp?.lang) ?? 'de'
+  const t = getT(lang)
+
+  const hrefWithLang = (href: string) => {
+    const params = new URLSearchParams()
+    if (lang) params.set('lang', lang)
+    const qs = params.toString()
+    return qs ? `${href}?${qs}` : href
+  }
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: 'Leistungen – MVPWERK',
+    name: t.jsonLdName,
     url: `${SITE_URL}/leistungen`,
-    description:
-      'Leistungen von MVPWERK: Beratung, UI/UX, Full-Stack Entwicklung, Auth, KI-Integrationen, Tracking, SEO und Deployment.',
+    description: t.jsonLdDesc,
     isPartOf: { '@type': 'WebSite', name: 'MVPWERK', url: SITE_URL },
+    inLanguage: lang,
   }
 
   return (
@@ -164,31 +234,28 @@ export default function LeistungenPage() {
       <header className="relative mx-auto w-full max-w-[1400px] px-4 pt-10 sm:px-6 sm:pt-12">
         <div className="inline-flex items-center gap-2 rounded-full border border-slate-900/10 bg-white/70 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur">
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500/70" />
-          Leistungen · strukturiert nach Phasen
+          {t.badge}
         </div>
 
         <h1 className="mt-4 text-[28px] font-semibold leading-[1.08] tracking-tight text-slate-900 sm:text-[38px] md:text-[44px]">
-          Alles drin, was moderne Software braucht.
+          {t.h1}
         </h1>
 
-        <p className="mt-3 max-w-[980px] text-[14px] leading-relaxed text-slate-700 sm:text-[15px]">
-          Von Scope &amp; UI/UX über Full-Stack bis KI, Auth, Tracking &amp; Go-Live – so aufgebaut, dass Sie sich einzelne Bausteine
-          gezielt rauspicken können, ohne Text-Wand.
-        </p>
+        <p className="mt-3 max-w-[980px] text-[14px] leading-relaxed text-slate-700 sm:text-[15px]">{t.intro}</p>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
           <Link
-            href="/kontakt"
+            href={hrefWithLang('/kontakt')}
             className="group inline-flex h-12 w-full items-center justify-center rounded-2xl bg-slate-900 px-6 text-sm font-semibold text-white shadow-[0_18px_55px_rgba(15,23,42,0.22)] transition hover:translate-y-[-1px] hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/20 sm:w-auto"
           >
-            Projekt anfragen
+            {t.cta}
             <span className="ml-2 inline-block transition group-hover:translate-x-0.5">→</span>
           </Link>
-          <div className="text-[11px] text-slate-600">Unverbindlich · Antwort meist am selben Tag</div>
+          <div className="text-[11px] text-slate-600">{t.ctaSub}</div>
         </div>
       </header>
 
-      {/* Overview Grid (aus deiner LeistungenSection) */}
+      {/* Overview Grid */}
       <section className="relative mx-auto w-full max-w-[1400px] px-4 pt-10 sm:px-6">
         <Card className="p-5 sm:p-6">
           <div className="pointer-events-none absolute inset-0 opacity-60">
@@ -198,24 +265,28 @@ export default function LeistungenPage() {
           <div className="relative">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <div className="text-[12px] font-semibold text-slate-900">Kurz-Überblick</div>
-                <div className="mt-1 text-[11px] text-slate-600">
-                  Weiter unten: Filter + Suche (z. B. <span className="font-medium text-slate-900">KI</span>,{' '}
-                  <span className="font-medium text-slate-900">OAuth</span>,{' '}
-                  <span className="font-medium text-slate-900">GTM</span>,{' '}
-                  <span className="font-medium text-slate-900">GA4</span>,{' '}
-                  <span className="font-medium text-slate-900">API</span>)
-                </div>
+                <div className="text-[12px] font-semibold text-slate-900">{t.shortTitle}</div>
+                <div className="mt-1 text-[11px] text-slate-600">{t.shortSub}</div>
               </div>
-              <div className="text-[11px] text-slate-600">Produktgefühl: clean, schnell, übergabefähig.</div>
+              <div className="text-[11px] text-slate-600">{t.rightHint}</div>
             </div>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {OVERVIEW.map((s) => (
-                <div key={s.title} className="rounded-[1.35rem] border border-slate-900/10 bg-white/70 p-5 shadow-sm backdrop-blur">
+              {t.overview.map((s) => (
+                <div
+                  key={s.title}
+                  className="rounded-[1.35rem] border border-slate-900/10 bg-white/70 p-5 shadow-sm backdrop-blur"
+                >
                   <div className="flex items-start gap-3">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-900/10 bg-white/80 text-slate-900/70 shadow-sm">
-                      {s.icon}
+                      {/* Icon bleibt wie vorher, nur “neutral” */}
+                      <svg viewBox="0 0 24 24" className="h-[16px] w-[16px]" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M7 7h10M7 12h10M7 17h7" strokeLinecap="round" />
+                        <path
+                          d="M6 3h12a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"
+                          opacity="0.45"
+                        />
+                      </svg>
                     </span>
                     <div className="min-w-0">
                       <div className="text-[13px] font-semibold text-slate-900">{s.title}</div>
@@ -239,10 +310,8 @@ export default function LeistungenPage() {
                       </svg>
                     </span>
                     <div className="min-w-0">
-                      <div className="text-[13px] font-semibold text-slate-900">Performance, die man messen kann</div>
-                      <div className="mt-1 text-[12px] leading-relaxed text-slate-600">
-                        Core Web Vitals &amp; Lighthouse – 10 Sekunden Vergleich.
-                      </div>
+                      <div className="text-[13px] font-semibold text-slate-900">{t.perfTitle}</div>
+                      <div className="mt-1 text-[12px] leading-relaxed text-slate-600">{t.perfSub}</div>
                     </div>
                   </div>
 
@@ -253,7 +322,7 @@ export default function LeistungenPage() {
                       rel="noopener noreferrer"
                       className="group inline-flex h-11 items-center justify-center rounded-2xl bg-slate-900 px-5 text-[12px] font-semibold text-white shadow-[0_18px_55px_rgba(15,23,42,0.18)] transition hover:translate-y-[-1px] hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/20"
                     >
-                      MVPWERK analysieren
+                      {t.analyzeUs}
                       <span className="ml-2 inline-block transition group-hover:translate-x-0.5">↗</span>
                     </a>
 
@@ -263,10 +332,10 @@ export default function LeistungenPage() {
                       rel="noopener noreferrer"
                       className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-900/10 bg-white/70 px-5 text-[12px] font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
                     >
-                      Konkurrenz analysieren ↗
+                      {t.analyzeComp}
                     </a>
 
-                    <div className="text-[11px] text-slate-600 sm:ml-2">Neuer Tab</div>
+                    <div className="text-[11px] text-slate-600 sm:ml-2">{t.newTab}</div>
                   </div>
                 </div>
               </div>
@@ -277,9 +346,9 @@ export default function LeistungenPage() {
         </Card>
       </section>
 
-      {/* Full Leistungen (dein Client) */}
+      {/* Full Leistungen (Client) */}
       <section className="relative mx-auto w-full max-w-[1400px] px-4 pb-16 pt-8 sm:px-6 sm:pb-20">
-        <LeistungenClient />
+        <LeistungenClient lang={lang} />
       </section>
 
       <style>{`

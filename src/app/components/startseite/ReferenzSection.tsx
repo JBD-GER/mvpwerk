@@ -2,127 +2,219 @@
 'use client'
 
 import Image from 'next/image'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 
-const FEATURES = [
-  {
-    t: 'Nahtlose KI-Integration',
-    s: 'Secured End-to-End Flow. Saubere KI-Integration.',
-    icon: (
-      <svg
-        viewBox="0 0 24 24"
-        className="h-[16px] w-[16px]"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M7 7h10M7 12h10M7 17h7" />
-        <path d="M6 3h12a2 2 0 0 1 2 2v14l-3-2-3 2-3-2-3 2V5a2 2 0 0 1 2-2z" />
-      </svg>
-    ),
-  },
-  {
-    t: 'Login, Rollen & Rechte',
-    s: 'Mehrbenutzerfähig, sauber strukturiert, korrekte Zugriffsrechte.',
-    icon: (
-      <svg
-        viewBox="0 0 24 24"
-        className="h-[16px] w-[16px]"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4z" />
-        <path d="M4 21a8 8 0 0 1 16 0" />
-      </svg>
-    ),
-  },
-  {
-    t: 'Supabase RLS / Multi-Tenant',
-    s: 'Datenzugriff pro Team/Account abgesichert. Sauber & übergabefähig.',
-    icon: (
-      <svg
-        viewBox="0 0 24 24"
-        className="h-[16px] w-[16px]"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M12 3l8 4v6c0 5-3 8-8 8s-8-3-8-8V7l8-4z" />
-        <path d="M9 12l2 2 4-4" />
-      </svg>
-    ),
-  },
-  {
-    t: 'Dashboards & KPIs',
-    s: 'Status, Charts, Filter – wirkt sofort „fertig“. Perfektes Design.',
-    icon: (
-      <svg
-        viewBox="0 0 24 24"
-        className="h-[16px] w-[16px]"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M4 19V5" />
-        <path d="M4 19h16" />
-        <path d="M8 15v-4" />
-        <path d="M12 15v-7" />
-        <path d="M16 15v-10" />
-      </svg>
-    ),
-  },
-  {
-    t: 'Dokumente & Uploads',
-    s: 'Storage + Zugriffslogik statt „nur Download-Link“. Gesicherte Ablage.',
-    icon: (
-      <svg
-        viewBox="0 0 24 24"
-        className="h-[16px] w-[16px]"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M12 3v12" />
-        <path d="M8 7l4-4 4 4" />
-        <path d="M4 21h16" />
-      </svg>
-    ),
-  },
-  {
-    t: 'Next.js + APIs (Full-Stack)',
-    s: 'API Routes, Server-Logic, Validierung – übergabefähig.',
-    icon: (
-      <svg
-        viewBox="0 0 24 24"
-        className="h-[16px] w-[16px]"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M8 9l-3 3 3 3" />
-        <path d="M16 9l3 3-3 3" />
-        <path d="M13 7l-2 10" />
-      </svg>
-    ),
-  },
-]
+type Lang = 'de' | 'en'
 
 export default function ReferenzSection() {
   const sectionRef = useRef<HTMLElement | null>(null)
   const [visible, setVisible] = useState(false)
+
+  const searchParams = useSearchParams()
+  const lang = ((searchParams?.get('lang') as Lang) || 'de') satisfies Lang
+
+  const t = useMemo(() => {
+    return {
+      de: {
+        features: [
+          {
+            t: 'Nahtlose KI-Integration',
+            s: 'Secured End-to-End Flow. Saubere KI-Integration.',
+          },
+          {
+            t: 'Login, Rollen & Rechte',
+            s: 'Mehrbenutzerfähig, sauber strukturiert, korrekte Zugriffsrechte.',
+          },
+          {
+            t: 'Supabase RLS / Multi-Tenant',
+            s: 'Datenzugriff pro Team/Account abgesichert. Sauber & übergabefähig.',
+          },
+          {
+            t: 'Dashboards & KPIs',
+            s: 'Status, Charts, Filter – wirkt sofort „fertig“. Perfektes Design.',
+          },
+          {
+            t: 'Dokumente & Uploads',
+            s: 'Storage + Zugriffslogik statt „nur Download-Link“. Gesicherte Ablage.',
+          },
+          {
+            t: 'Next.js + APIs (Full-Stack)',
+            s: 'API Routes, Server-Logic, Validierung – übergabefähig.',
+          },
+        ],
+        pill: 'Referenz · Live-Demo',
+        h2: 'Fertiges Kundenprojekt live ansehen.',
+        p1a: 'Öffnen Sie ',
+        p1b: 'GLENO',
+        p1c: ' und klicken Sie sich direkt durchs Dashboard.',
+        p1d: 'Produktion, echtes UI, echte Performance.',
+        cta: 'GLENO live öffnen',
+        note: 'Öffnet in neuem Tab · kostenlose Anmeldung notwendig',
+        badge: 'Live-Demo',
+        imgAlt: 'GLENO Dashboard (Live-Referenz)',
+        footer:
+          'Wenn Sie genau dieses „Produktgefühl“ wollen: Wir bauen Ihre cloudbasierte Web App / SaaS in derselben Qualität.',
+        cta2: 'Live testen ↗',
+      },
+      en: {
+        features: [
+          {
+            t: 'Seamless AI integration',
+            s: 'Secured end-to-end flow. Clean AI integration.',
+          },
+          {
+            t: 'Login, roles & permissions',
+            s: 'Multi-user ready, well-structured, correct access control.',
+          },
+          {
+            t: 'Supabase RLS / Multi-tenant',
+            s: 'Data access secured per team/account. Clean & handover-ready.',
+          },
+          {
+            t: 'Dashboards & KPIs',
+            s: 'Status, charts, filters — instantly feels “finished”. Polished design.',
+          },
+          {
+            t: 'Documents & uploads',
+            s: 'Storage + access logic instead of “just a download link”. Secure file vault.',
+          },
+          {
+            t: 'Next.js + APIs (Full-Stack)',
+            s: 'API routes, server logic, validation — handover-ready.',
+          },
+        ],
+        pill: 'Reference · Live demo',
+        h2: 'View a finished client project live.',
+        p1a: 'Open ',
+        p1b: 'GLENO',
+        p1c: ' and click through the dashboard.',
+        p1d: 'Production, real UI, real performance.',
+        cta: 'Open GLENO live',
+        note: 'Opens in a new tab · free signup required',
+        badge: 'Live demo',
+        imgAlt: 'GLENO Dashboard (Live reference)',
+        footer: 'If you want this exact “product feel”: we build your cloud web app / SaaS to the same quality bar.',
+        cta2: 'Try live ↗',
+      },
+    }[lang]
+  }, [lang])
+
+  const FEATURES = [
+    {
+      t: t.features[0].t,
+      s: t.features[0].s,
+      icon: (
+        <svg
+          viewBox="0 0 24 24"
+          className="h-[16px] w-[16px]"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M7 7h10M7 12h10M7 17h7" />
+          <path d="M6 3h12a2 2 0 0 1 2 2v14l-3-2-3 2-3-2-3 2V5a2 2 0 0 1 2-2z" />
+        </svg>
+      ),
+    },
+    {
+      t: t.features[1].t,
+      s: t.features[1].s,
+      icon: (
+        <svg
+          viewBox="0 0 24 24"
+          className="h-[16px] w-[16px]"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4z" />
+          <path d="M4 21a8 8 0 0 1 16 0" />
+        </svg>
+      ),
+    },
+    {
+      t: t.features[2].t,
+      s: t.features[2].s,
+      icon: (
+        <svg
+          viewBox="0 0 24 24"
+          className="h-[16px] w-[16px]"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 3l8 4v6c0 5-3 8-8 8s-8-3-8-8V7l8-4z" />
+          <path d="M9 12l2 2 4-4" />
+        </svg>
+      ),
+    },
+    {
+      t: t.features[3].t,
+      s: t.features[3].s,
+      icon: (
+        <svg
+          viewBox="0 0 24 24"
+          className="h-[16px] w-[16px]"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M4 19V5" />
+          <path d="M4 19h16" />
+          <path d="M8 15v-4" />
+          <path d="M12 15v-7" />
+          <path d="M16 15v-10" />
+        </svg>
+      ),
+    },
+    {
+      t: t.features[4].t,
+      s: t.features[4].s,
+      icon: (
+        <svg
+          viewBox="0 0 24 24"
+          className="h-[16px] w-[16px]"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 3v12" />
+          <path d="M8 7l4-4 4 4" />
+          <path d="M4 21h16" />
+        </svg>
+      ),
+    },
+    {
+      t: t.features[5].t,
+      s: t.features[5].s,
+      icon: (
+        <svg
+          viewBox="0 0 24 24"
+          className="h-[16px] w-[16px]"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M8 9l-3 3 3 3" />
+          <path d="M16 9l3 3-3 3" />
+          <path d="M13 7l-2 10" />
+        </svg>
+      ),
+    },
+  ]
 
   useEffect(() => {
     const el = sectionRef.current
@@ -164,16 +256,19 @@ export default function ReferenzSection() {
         >
           <div className="inline-flex items-center gap-2 rounded-full border border-slate-900/10 bg-white/70 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500/70" />
-            Referenz · Live-Demo
+            {t.pill}
           </div>
 
           <h2 className="mt-4 text-[28px] font-semibold leading-[1.08] tracking-tight text-slate-900 sm:text-[38px] md:text-[44px]">
-            Fertiges Kundenprojekt live ansehen.
+            {t.h2}
           </h2>
 
           <p className="mt-3 text-[14px] leading-relaxed text-slate-700 sm:text-[15px]">
-            Öffnen Sie <strong className="font-semibold text-slate-900">GLENO</strong> und klicken Sie sich direkt durchs Dashboard.
-            Produktion, echtes UI, echte Performance.
+            {t.p1a}
+            <strong className="font-semibold text-slate-900">{t.p1b}</strong>
+            {t.p1c}
+            <br />
+            {t.p1d}
           </p>
 
           <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -183,11 +278,11 @@ export default function ReferenzSection() {
               rel="noopener noreferrer"
               className="group inline-flex h-12 w-full items-center justify-center rounded-2xl bg-slate-900 px-6 text-sm font-semibold text-white shadow-[0_18px_55px_rgba(15,23,42,0.22)] transition hover:translate-y-[-1px] hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/20 sm:w-auto"
             >
-              GLENO live öffnen
+              {t.cta}
               <span className="ml-2 inline-block transition group-hover:translate-x-0.5">↗</span>
             </a>
 
-            <div className="text-[11px] text-slate-600">Öffnet in neuem Tab · kostenlose Anmeldung notwendig</div>
+            <div className="text-[11px] text-slate-600">{t.note}</div>
           </div>
 
           {/* “Was Sie live sehen” */}
@@ -248,7 +343,7 @@ export default function ReferenzSection() {
                 <div className="flex items-center gap-2 text-[11px] font-medium text-slate-600">
                   <span className="truncate">gleno.de</span>
                   <span className="rounded-full border border-slate-900/10 bg-white/70 px-2 py-0.5 text-[10px] text-slate-700 shadow-sm">
-                    Live-Demo
+                    {t.badge}
                   </span>
                 </div>
               </div>
@@ -259,7 +354,7 @@ export default function ReferenzSection() {
                   <div className="absolute inset-0 opacity-55 [background-image:radial-gradient(circle_at_25%_20%,rgba(15,23,42,0.10),transparent_45%),linear-gradient(to_bottom,rgba(255,255,255,0.70),rgba(255,255,255,0.40))]" />
                   <Image
                     src="/bilder/gleno_dashboard_referenz.png"
-                    alt="GLENO Dashboard (Live-Referenz)"
+                    alt={t.imgAlt}
                     width={2400}
                     height={1500}
                     sizes="(min-width: 1024px) 980px, 100vw"
@@ -271,9 +366,7 @@ export default function ReferenzSection() {
 
                 {/* Footer */}
                 <div className="mt-4 flex flex-col items-center justify-between gap-3 sm:flex-row">
-                  <div className="text-[11px] text-slate-600">
-                    Wenn Sie genau dieses „Produktgefühl“ wollen: Wir bauen Ihre cloudbasierte Web App / SaaS in derselben Qualität.
-                  </div>
+                  <div className="text-[11px] text-slate-600">{t.footer}</div>
 
                   <a
                     href="https://gleno.de"
@@ -281,7 +374,7 @@ export default function ReferenzSection() {
                     rel="noopener noreferrer"
                     className="inline-flex h-10 items-center justify-center rounded-2xl border border-slate-900/10 bg-white/70 px-4 text-[12px] font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
                   >
-                    Live testen ↗
+                    {t.cta2}
                   </a>
                 </div>
               </div>

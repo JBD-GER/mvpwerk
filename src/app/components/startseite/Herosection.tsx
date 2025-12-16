@@ -2,7 +2,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+
+type Lang = 'de' | 'en'
 
 function Star({ className = 'h-4 w-4' }: { className?: string }) {
   return (
@@ -15,6 +18,121 @@ function Star({ className = 'h-4 w-4' }: { className?: string }) {
 export default function HeroSection() {
   const portalRef = useRef<HTMLDivElement | null>(null)
   const [runAnim, setRunAnim] = useState(false)
+
+  const searchParams = useSearchParams()
+  const lang = ((searchParams?.get('lang') as Lang) || 'de') satisfies Lang
+
+  const t = useMemo(() => {
+    return {
+      de: {
+        pill1: 'MVP Agentur',
+        pill2: 'Web App Agentur',
+        h1: 'MVP Agentur für SaaS und Web Apps',
+        p1a: 'MVPWERK baut ',
+        p1b: 'Cloudbasierte MVP Software, SaaS',
+        p1c: ' und ',
+        p1d: 'Web Apps',
+        p1e:
+          ' für Startups, KMU und Teams — sauber, schnell, kampagnen-ready. Perfekt, wenn Sie ein ',
+        p1f: 'MVP entwickeln lassen',
+        p1g: ' möchten und sofort Resultate sehen wollen.',
+        cta1: 'Projekt anfragen',
+        cta2: 'Leistungen ansehen',
+        note: 'Unverbindlich · Antwort meist am selben Tag',
+        kpis: [
+          { k: 'Performance', v: '90+ Lighthouse' },
+          { k: 'Transparenz', v: '1×/Woche Demo' },
+          { k: 'Projekte', v: '25+ umgesetzt' },
+          { k: 'Ownership', v: 'Code gehört Ihnen' },
+        ],
+        ratingTitle: '4,9/5 · Kundenbewertung',
+        ratingSub: 'Basierend auf Projekten & Zusammenarbeit',
+        trust1: '⚡ Antwort meist am selben Tag',
+        trust2: '✅ 100% unverbindlich',
+
+        // right card
+        madeIn: 'Made in Germany',
+        domain: 'IHREDOMAIN.de/app',
+
+        slide1Top: 'Entwickelt mit',
+        slide1Mid: 'React / Next.js',
+        slide1Bot: 'Sauberes UI · schnelle Iterationen · wartbar',
+
+        slide2Top: 'Deployed mit',
+        slide2Mid: 'Vercel / Supabase',
+        slide2Bot: 'CI/CD · Auth · Datenbank · Storage',
+
+        slide3Top: 'Security',
+        slide3Mid: 'Rollen · RLS · Zugriff',
+        slide3Bot: 'Sicheres Datenmodell · klare Rechte · skalierbar',
+
+        slide4Top: 'Server',
+        slide4Mid: 'EU · Frankfurt',
+        slide4Bot: 'DSGVO-freundlich · geringe Latenz',
+
+        finalTitle: 'Nur noch wenige Klicks entfernt',
+        finalText: 'bis zu Ihrer eigenen Software – sauber gebaut, kampagnen-ready, skalierbar.',
+        finalCta: 'Projekt anfragen →',
+      },
+      en: {
+        pill1: 'MVP Agency',
+        pill2: 'Web App Agency',
+        h1: 'MVP Agency for SaaS and Web Apps',
+        p1a: 'MVPWERK builds ',
+        p1b: 'cloud-based MVP software, SaaS',
+        p1c: ' and ',
+        p1d: 'web apps',
+        p1e:
+          ' for startups, SMEs, and teams — clean, fast, campaign-ready. Perfect if you want to ',
+        p1f: 'build an MVP',
+        p1g: ' and see results quickly.',
+        cta1: 'Request a project',
+        cta2: 'View services',
+        note: 'No obligation · Reply usually same day',
+        kpis: [
+          { k: 'Performance', v: '90+ Lighthouse' },
+          { k: 'Transparency', v: 'Weekly demo' },
+          { k: 'Projects', v: '25+ delivered' },
+          { k: 'Ownership', v: 'You own the code' },
+        ],
+        ratingTitle: '4.9/5 · Client rating',
+        ratingSub: 'Based on projects & collaboration',
+        trust1: '⚡ Reply usually same day',
+        trust2: '✅ 100% no obligation',
+
+        // right card
+        madeIn: 'Made in Germany',
+        domain: 'YOURDOMAIN.com/app',
+
+        slide1Top: 'Built with',
+        slide1Mid: 'React / Next.js',
+        slide1Bot: 'Clean UI · fast iterations · maintainable',
+
+        slide2Top: 'Deployed with',
+        slide2Mid: 'Vercel / Supabase',
+        slide2Bot: 'CI/CD · Auth · Database · Storage',
+
+        slide3Top: 'Security',
+        slide3Mid: 'Roles · RLS · Access',
+        slide3Bot: 'Secure data model · clear permissions · scalable',
+
+        slide4Top: 'Server',
+        slide4Mid: 'EU · Frankfurt',
+        slide4Bot: 'GDPR-friendly · low latency',
+
+        finalTitle: 'Just a few clicks away',
+        finalText: 'from your own software — clean build, campaign-ready, scalable.',
+        finalCta: 'Request a project →',
+      },
+    }[lang]
+  }, [lang])
+
+  const hrefWithLang = (href: string) => {
+    const p = new URLSearchParams(searchParams?.toString() || '')
+    p.set('lang', lang)
+    const qs = p.toString()
+    return qs ? `${href}?${qs}` : href
+  }
 
   useEffect(() => {
     // Desktop: sofort laufen lassen
@@ -61,7 +179,7 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Smooth Übergang nach unten (weniger „weiß“ nach oben, kein Cut) */}
+      {/* Smooth Übergang nach unten */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-16 sm:h-20 md:h-24">
         <div className="absolute inset-0 mvpwerk-hero-bottom-fade" />
         <div className="absolute inset-0 mvpwerk-hero-bottom-grid" />
@@ -73,51 +191,48 @@ export default function HeroSection() {
           <div className="lg:col-span-7">
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex items-center rounded-full border border-slate-900/10 bg-white/70 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur">
-                MVP Agentur
+                {t.pill1}
               </span>
               <span className="inline-flex items-center rounded-full border border-slate-900/10 bg-white/70 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur">
-                Web App Agentur
+                {t.pill2}
               </span>
             </div>
 
             <h1 className="mt-5 text-[36px] font-semibold leading-[1.05] tracking-tight sm:text-[50px] md:text-[64px]">
-              MVP Agentur für SaaS und Web Apps
+              {t.h1}
             </h1>
 
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-700 sm:text-lg">
-              MVPWERK baut <strong className="font-semibold text-slate-900">Cloudbasierte MVP Software, SaaS</strong> und
-              <strong className="font-semibold text-slate-900"> Web Apps</strong> für Startups, KMU und Teams — sauber,
-              schnell, kampagnen-ready. Perfekt, wenn Sie ein{' '}
-              <strong className="font-semibold text-slate-900">MVP entwickeln lassen</strong> möchten und sofort
-              Resultate sehen wollen.
+              {t.p1a}
+              <strong className="font-semibold text-slate-900">{t.p1b}</strong>
+              {t.p1c}
+              <strong className="font-semibold text-slate-900"> {t.p1d}</strong>
+              {t.p1e}
+              <strong className="font-semibold text-slate-900">{t.p1f}</strong>
+              {t.p1g}
             </p>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link
-                href="/kontakt"
+                href={hrefWithLang('/kontakt')}
                 className="group inline-flex h-12 items-center justify-center rounded-2xl bg-slate-900 px-6 text-sm font-semibold text-white shadow-[0_18px_55px_rgba(15,23,42,0.24)] transition hover:translate-y-[-1px] hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900/20"
               >
-                Projekt anfragen
+                {t.cta1}
                 <span className="ml-2 inline-block transition group-hover:translate-x-0.5">→</span>
               </Link>
 
               <Link
-                href="/leistungen"
+                href={hrefWithLang('/leistungen')}
                 className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-900/10 bg-white/70 px-6 text-sm font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
               >
-                Leistungen ansehen
+                {t.cta2}
               </Link>
 
-              <div className="mt-1 text-[11px] text-slate-600 sm:mt-0">Unverbindlich · Antwort meist am selben Tag</div>
+              <div className="mt-1 text-[11px] text-slate-600 sm:mt-0">{t.note}</div>
             </div>
 
             <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {[
-                { k: 'Performance', v: '90+ Lighthouse' },
-                { k: 'Transparenz', v: '1×/Woche Demo' },
-                { k: 'Projekte', v: '25+ umgesetzt' },
-                { k: 'Ownership', v: 'Code gehört Ihnen' },
-              ].map((x) => (
+              {t.kpis.map((x) => (
                 <div
                   key={x.k}
                   className="rounded-2xl border border-slate-900/10 bg-white/70 px-4 py-3 text-center shadow-sm backdrop-blur"
@@ -128,7 +243,7 @@ export default function HeroSection() {
               ))}
             </div>
 
-            {/* Bewertung / Trust (wieder drin) */}
+            {/* Rating / Trust */}
             <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1 text-amber-500">
@@ -140,17 +255,17 @@ export default function HeroSection() {
                 </div>
 
                 <div className="min-w-0">
-                  <div className="text-[12px] font-semibold text-slate-900">4,9/5 · Kundenbewertung</div>
-                  <div className="text-[11px] text-slate-600">Basierend auf Projekten &amp; Zusammenarbeit</div>
+                  <div className="text-[12px] font-semibold text-slate-900">{t.ratingTitle}</div>
+                  <div className="text-[11px] text-slate-600">{t.ratingSub}</div>
                 </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center rounded-full border border-slate-900/10 bg-white/70 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur">
-                  ⚡ Antwort meist am selben Tag
+                  {t.trust1}
                 </span>
                 <span className="inline-flex items-center rounded-full border border-slate-900/10 bg-white/70 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur">
-                  ✅ 100% unverbindlich
+                  {t.trust2}
                 </span>
               </div>
             </div>
@@ -175,14 +290,14 @@ export default function HeroSection() {
 
                     <div className="flex items-center gap-2 text-[11px] font-medium text-slate-600">
                       <span className="mvpwerk-flag-de" aria-hidden />
-                      Made in Germany
+                      {t.madeIn}
                     </div>
                   </div>
 
                   <div className="mt-3">
                     <div className="flex min-w-0 items-center gap-2 rounded-2xl border border-slate-900/10 bg-white/70 px-3 py-2 shadow-sm backdrop-blur">
                       <span className="text-[11px] text-slate-500">🔒</span>
-                      <div className="min-w-0 truncate text-[11px] font-medium text-slate-600">IHREDOMAIN.de/app</div>
+                      <div className="min-w-0 truncate text-[11px] font-medium text-slate-600">{t.domain}</div>
                     </div>
                   </div>
                 </div>
@@ -242,11 +357,9 @@ export default function HeroSection() {
                                   <path d="M13 7l-2 10" />
                                 </svg>
                               </div>
-                              <div className="text-[11px] font-medium text-slate-600">Entwickelt mit</div>
-                              <div className="mt-1 text-sm font-semibold text-slate-900">React / Next.js</div>
-                              <div className="mt-1 text-[11px] leading-relaxed text-slate-600">
-                                Sauberes UI · schnelle Iterationen · wartbar
-                              </div>
+                              <div className="text-[11px] font-medium text-slate-600">{t.slide1Top}</div>
+                              <div className="mt-1 text-sm font-semibold text-slate-900">{t.slide1Mid}</div>
+                              <div className="mt-1 text-[11px] leading-relaxed text-slate-600">{t.slide1Bot}</div>
                             </div>
                           </div>
 
@@ -266,11 +379,9 @@ export default function HeroSection() {
                                   <path d="M10 14l-1 4 4-1 2-2" />
                                 </svg>
                               </div>
-                              <div className="text-[11px] font-medium text-slate-600">Deployed mit</div>
-                              <div className="mt-1 text-sm font-semibold text-slate-900">Vercel / Supabase</div>
-                              <div className="mt-1 text-[11px] leading-relaxed text-slate-600">
-                                CI/CD · Auth · Datenbank · Storage
-                              </div>
+                              <div className="text-[11px] font-medium text-slate-600">{t.slide2Top}</div>
+                              <div className="mt-1 text-sm font-semibold text-slate-900">{t.slide2Mid}</div>
+                              <div className="mt-1 text-[11px] leading-relaxed text-slate-600">{t.slide2Bot}</div>
                             </div>
                           </div>
 
@@ -289,11 +400,9 @@ export default function HeroSection() {
                                   <path d="M9 12l2 2 4-4" />
                                 </svg>
                               </div>
-                              <div className="text-[11px] font-medium text-slate-600">Security</div>
-                              <div className="mt-1 text-sm font-semibold text-slate-900">Rollen · RLS · Zugriff</div>
-                              <div className="mt-1 text-[11px] leading-relaxed text-slate-600">
-                                Sicheres Datenmodell · klare Rechte · skalierbar
-                              </div>
+                              <div className="text-[11px] font-medium text-slate-600">{t.slide3Top}</div>
+                              <div className="mt-1 text-sm font-semibold text-slate-900">{t.slide3Mid}</div>
+                              <div className="mt-1 text-[11px] leading-relaxed text-slate-600">{t.slide3Bot}</div>
                             </div>
                           </div>
 
@@ -314,27 +423,23 @@ export default function HeroSection() {
                                   <path d="M7 16h.01" />
                                 </svg>
                               </div>
-                              <div className="text-[11px] font-medium text-slate-600">Server</div>
-                              <div className="mt-1 text-sm font-semibold text-slate-900">EU · Frankfurt</div>
-                              <div className="mt-1 text-[11px] leading-relaxed text-slate-600">
-                                DSGVO-freundlich · geringe Latenz
-                              </div>
+                              <div className="text-[11px] font-medium text-slate-600">{t.slide4Top}</div>
+                              <div className="mt-1 text-sm font-semibold text-slate-900">{t.slide4Mid}</div>
+                              <div className="mt-1 text-[11px] leading-relaxed text-slate-600">{t.slide4Bot}</div>
                             </div>
                           </div>
                         </div>
 
                         <div className="mvpwerk-final absolute inset-0 flex items-center justify-center p-5 text-center sm:p-7">
                           <div className="mvpwerk-final-card">
-                            <div className="text-sm font-semibold text-slate-900">Nur noch wenige Klicks entfernt</div>
-                            <div className="mt-1 text-[12px] leading-relaxed text-slate-600">
-                              bis zu Ihrer eigenen Software – sauber gebaut, kampagnen-ready, skalierbar.
-                            </div>
+                            <div className="text-sm font-semibold text-slate-900">{t.finalTitle}</div>
+                            <div className="mt-1 text-[12px] leading-relaxed text-slate-600">{t.finalText}</div>
                             <div className="mt-4 flex justify-center">
                               <Link
-                                href="/kontakt"
+                                href={hrefWithLang('/kontakt')}
                                 className="inline-flex h-10 items-center justify-center rounded-2xl border border-slate-900/10 bg-white/70 px-4 text-[12px] font-semibold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10"
                               >
-                                Projekt anfragen →
+                                {t.finalCta}
                               </Link>
                             </div>
                           </div>
@@ -363,7 +468,6 @@ export default function HeroSection() {
           background: linear-gradient(to bottom,#000 0%,#000 33.33%,#dd0000 33.33%,#dd0000 66.66%,#ffce00 66.66%,#ffce00 100%);
         }
 
-        /* Übergang: kürzer + später startend => weniger weiß nach oben */
         .mvpwerk-hero-bottom-fade{
           background: linear-gradient(
             to bottom,
@@ -375,7 +479,6 @@ export default function HeroSection() {
           );
         }
 
-        /* Grid unten ausfaden ohne sichtbare Kante */
         .mvpwerk-hero-bottom-grid{
           background-image:
             linear-gradient(to_right, rgba(15,23,42,0.035) 1px, transparent 1px),
@@ -390,7 +493,6 @@ export default function HeroSection() {
           );
         }
 
-        /* HERO sheen */
         .mvpwerk-hero-sheen {
           background: linear-gradient(90deg,transparent 0%,rgba(15,23,42,0.06) 35%,rgba(15,23,42,0.10) 50%,rgba(15,23,42,0.06) 65%,transparent 100%);
           transform: translateX(-35%);
@@ -404,7 +506,6 @@ export default function HeroSection() {
           100% { transform: translateX(35%); opacity: 0.45; }
         }
 
-        /* PORTAL base */
         .mvpwerk-portal { transform: translateZ(0); border-radius: 24px; overflow: hidden; }
         .mvpwerk-behind { z-index: 1; }
         .mvpwerk-door { z-index: 3; }
@@ -443,7 +544,7 @@ export default function HeroSection() {
         .mvpwerk-anim .mvpwerk-skeleton{
           animation:
             skelPulse 0.95s ease-in-out 0.85s infinite,
-            skelVanish 0.45s ease-in-out 2.05s forwards; /* endet ca. 2.50s */
+            skelVanish 0.45s ease-in-out 2.05s forwards;
         }
         @keyframes skelPulse { 0%,100%{opacity:0.95;} 50%{opacity:0.70;} }
         @keyframes skelVanish { to { opacity:0; transform:scale(1.02); filter:blur(6px);} }

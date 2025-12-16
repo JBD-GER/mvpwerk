@@ -1,7 +1,90 @@
 // src/app/danke/page.tsx
+'use client'
+
 import Link from 'next/link'
+import { useEffect, useMemo, useState } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+
+type Lang = 'de' | 'en'
+const LANG_COOKIE = 'mvpwerk_lang'
+const ONE_YEAR = 60 * 60 * 24 * 365
+
+function normalizeLang(v: string | null | undefined): Lang | null {
+  if (!v) return null
+  const s = v.toLowerCase()
+  if (s === 'de' || s.startsWith('de-')) return 'de'
+  if (s === 'en' || s.startsWith('en-')) return 'en'
+  return null
+}
+
+function readCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null
+  const match = document.cookie.match(
+    new RegExp('(?:^|; )' + name.replace(/[$()*+./?[\\\]^{|}-]/g, '\\$&') + '=([^;]*)')
+  )
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+function writeLangCookie(lang: Lang) {
+  if (typeof document === 'undefined') return
+  document.cookie = `${LANG_COOKIE}=${encodeURIComponent(lang)}; path=/; max-age=${ONE_YEAR}; samesite=lax`
+}
+
+function detectBrowserLang(): Lang {
+  if (typeof navigator === 'undefined') return 'de'
+  return normalizeLang(navigator.language) ?? 'de'
+}
 
 export default function DankePage() {
+  const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const [lang, setLang] = useState<Lang>('de')
+
+  // ✅ Resolve lang: query -> cookie -> browser; sync cookie + URL (once)
+  useEffect(() => {
+    const q = normalizeLang(searchParams?.get('lang'))
+    if (q) {
+      setLang(q)
+      writeLangCookie(q)
+      return
+    }
+
+    const c = normalizeLang(readCookie(LANG_COOKIE))
+    const detected = c ?? detectBrowserLang()
+    setLang(detected)
+    writeLangCookie(detected)
+
+    const params = new URLSearchParams(searchParams?.toString() || '')
+    params.set('lang', detected)
+    router.replace(`${pathname}?${params.toString()}`)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, router, searchParams])
+
+  const t = useMemo(() => {
+    return lang === 'de'
+      ? {
+          badge: 'Anfrage gesendet',
+          h1: 'Danke! Wir melden uns zeitnah.',
+          p: 'In der Regel erhalten Sie am selben Tag eine Rückmeldung.',
+          back: 'Zur Startseite',
+        }
+      : {
+          badge: 'Request sent',
+          h1: "Thanks! We'll get back to you shortly.",
+          p: "You’ll usually hear back the same day.",
+          back: 'Back to home',
+        }
+  }, [lang])
+
+  const hrefWithLang = (href: string) => {
+    const params = new URLSearchParams(searchParams?.toString() || '')
+    params.set('lang', lang)
+    const qs = params.toString()
+    return qs ? `${href}?${qs}` : href
+  }
+
   return (
     <main className="relative overflow-hidden bg-white">
       {/* clean background (nur slate, kein bunt) */}
@@ -31,7 +114,7 @@ export default function DankePage() {
                   <span className="absolute inline-flex h-2.5 w-2.5 rounded-full bg-slate-900/60" />
                   <span className="mvpw-dotpulse absolute inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500/70" />
                 </span>
-                Anfrage gesendet
+                {t.badge}
               </div>
 
               {/* Success Animation */}
@@ -60,15 +143,15 @@ export default function DankePage() {
 
                 <div className="min-w-0">
                   <h1 className="text-[28px] font-semibold leading-[1.06] tracking-tight text-slate-900 sm:text-[42px]">
-                    Danke! Wir melden uns zeitnah.
+                    {t.h1}
                   </h1>
                   <p className="mt-3 max-w-[720px] text-[14px] leading-relaxed text-slate-700 sm:text-[15px]">
-                    In der Regel erhalten Sie am selben Tag eine Rückmeldung.
+                    {t.p}
                   </p>
 
                   <div className="mt-6">
                     <Link
-                      href="/"
+                      href={hrefWithLang('/')}
                       className={[
                         'group inline-flex h-12 w-full items-center justify-center rounded-2xl px-6 text-sm font-semibold transition sm:w-auto',
                         'border border-slate-900/10 bg-white/75 text-slate-900 shadow-sm backdrop-blur',
@@ -76,7 +159,7 @@ export default function DankePage() {
                         'focus:outline-none focus:ring-2 focus:ring-slate-900/10',
                       ].join(' ')}
                     >
-                      Zur Startseite
+                      {t.back}
                       <span className="ml-2 inline-block transition group-hover:translate-x-0.5">→</span>
                     </Link>
                   </div>

@@ -10,6 +10,8 @@ import {
   renderMvpwerkContactInternalMail,
 } from '@/app/mails/emailTemplates'
 
+type Lang = 'de' | 'en'
+
 type Payload = {
   firstName: string
   lastName: string
@@ -19,6 +21,10 @@ type Payload = {
   acceptPrivacy: boolean
   acceptAgb: boolean
   website?: string // honeypot
+
+  // ✅ neu: Sprache + optional siteUrl (vom Client)
+  lang?: Lang | string
+  siteUrl?: string
 }
 
 function env(name: string) {
@@ -32,8 +38,15 @@ const resend = new Resend(env('RESEND_API_KEY'))
 function isEmail(v: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
 }
+
 function safe(v: unknown) {
   return (v ?? '').toString().trim()
+}
+
+function normalizeLang(v: unknown): Lang {
+  const s = safe(v).toLowerCase()
+  if (s === 'en' || s.startsWith('en-')) return 'en'
+  return 'de'
 }
 
 function parseBool(v: string | undefined, fallback = false) {
@@ -41,9 +54,42 @@ function parseBool(v: string | undefined, fallback = false) {
   return ['1', 'true', 'yes', 'on'].includes(v.toLowerCase())
 }
 
+/**
+ * ✅ Sicherheits-Guard: akzeptiere nur mvpwerk.de / www.mvpwerk.de als siteUrl.
+ * Alles andere -> fallback.
+ */
+function sanitizeSiteUrl(input: unknown, fallback: string) {
+  const raw = safe(input)
+  if (!raw) return fallback
+
+  let url = raw
+  if (!/^https?:\/\//i.test(url)) url = `https://${url}`
+
+  try {
+    const u = new URL(url)
+    const host = u.hostname.toLowerCase()
+
+    // erlaubt: mvpwerk.de + www.mvpwerk.de (optional noch subdomains, wenn du willst)
+    const allowed =
+      host === 'mvpwerk.de' ||
+      host === 'www.mvpwerk.de' ||
+      host.endsWith('.mvpwerk.de')
+
+    if (!allowed) return fallback
+
+    // ohne trailing slash
+    return `${u.protocol}//${u.host}`.replace(/\/+$/, '')
+  } catch {
+    return fallback
+  }
+}
+
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as Payload
+    const body = (await req.json().catch(() => null)) as Payload | null
+    if (!body) {
+      return NextResponse.json({ ok: false, error: 'Bad request' }, { status: 400 })
+    }
 
     // Honeypot: wenn gefüllt => Bot (trotzdem ok zurückgeben)
     if (safe(body.website)) {
@@ -75,33 +121,56 @@ export async function POST(req: Request) {
       )
     }
 
+    // ✅ Sprache bestimmen (kommt vom Client: query/cookie/browser => im Client gesetzt)
+    const lang = normalizeLang(body.lang)
+
     const FROM = env('RESEND_FROM')       // "MVPWERK <noreply@mail.mvpwerk.de>"
     const TO_INTERNAL = env('CONTACT_TO') // "info@mvpwerk.de"
 
-    const SITE_URL =
+    const SITE_URL_FALLBACK =
       process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'https://www.mvpwerk.de'
 
-    // Optional: Kunden-Bestätigung schaltbar (wenn du’s wirklich nutzen willst)
-    // Standard: TRUE (damit sich dein aktuelles Verhalten nicht “heimlich” ändert)
+    // optional: wenn Client siteUrl schickt, nur erlaubte Domains verwenden
+    const SITE_URL = sanitizeSiteUrl(body.siteUrl, SITE_URL_FALLBACK)
+
+    // Optional: Kunden-Bestätigung schaltbar (default TRUE)
     const SEND_CONFIRMATION = process.env.SEND_CONTACT_CONFIRMATION
       ? parseBool(process.env.SEND_CONTACT_CONFIRMATION, true)
       : true
 
-    // Optional: Wenn du trotz interner Mail IMMER eine Kopie willst (Zustellbarkeit)
+    // Optional: BCC intern auf Confirmation
     const BCC_INTERNAL_ON_CONFIRMATION = parseBool(
       process.env.CONTACT_BCC_INTERNAL,
       false
     )
 
-    const subjectInternal = `Neue Kontaktanfrage: ${firstName} ${lastName}`
-    const subjectCustomer = `Wir haben Ihre Anfrage erhalten – MVPWERK`
+    // ✅ Subjects DE/EN
+    const subjectInternal =
+      lang === 'en'
+        ? `New contact request: ${firstName} ${lastName}`
+        : `Neue Kontaktanfrage: ${firstName} ${lastName}`
 
-    const ctx = { firstName, lastName, email, phone, message, siteUrl: SITE_URL }
+    const subjectCustomer =
+      lang === 'en'
+        ? `We received your request — MVPWERK`
+        : `Wir haben Ihre Anfrage erhalten – MVPWERK`
 
-    const internalHtml = renderMvpwerkContactInternalMail(ctx)
-    const customerHtml = renderMvpwerkContactCustomerMail(ctx)
+    const ctx = {
+      firstName,
+      lastName,
+      email,
+      phone,
+      message,
+      siteUrl: SITE_URL,
+      lang, // ✅ wichtig: Templates rendern automatisch DE/EN
+    }
 
-    // ✅ Inline-Logo als CID Attachment (aus /public)
+    const internalHtml = renderMvpwerkContactInternalMail(ctx as any)
+    const customerHtml = renderMvpwerkContactCustomerMail(ctx as any)
+
+    // ✅ Optional: Inline-Logo als CID Attachment (nur sinnvoll, wenn Template <img src="cid:mvpwerk-logo"> nutzt)
+    // Wenn dein Template weiterhin eine normale URL nutzt, schadet das Attachment nicht,
+    // kostet aber minimal Traffic/IO. Du kannst es auch entfernen, wenn du willst.
     const logoAbsPath = path.join(
       process.cwd(),
       'public',
@@ -113,8 +182,8 @@ export async function POST(req: Request) {
     const inlineLogo = [
       {
         filename: 'mvpwerk-logo.png',
-        content: logoBuf,                 // Buffer ist erlaubt :contentReference[oaicite:2]{index=2}
-        contentId: 'mvpwerk-logo',        // CID-ID :contentReference[oaicite:3]{index=3}
+        content: logoBuf,
+        contentId: 'mvpwerk-logo',
         contentType: 'image/png',
       },
     ]
@@ -130,6 +199,7 @@ export async function POST(req: Request) {
       tags: [
         { name: 'type', value: 'contact_internal' },
         { name: 'site', value: 'mvpwerk' },
+        { name: 'lang', value: lang },
       ],
     })
 
@@ -151,6 +221,7 @@ export async function POST(req: Request) {
         tags: [
           { name: 'type', value: 'contact_customer' },
           { name: 'site', value: 'mvpwerk' },
+          { name: 'lang', value: lang },
         ],
       })
 
@@ -160,6 +231,7 @@ export async function POST(req: Request) {
     }
 
     console.log('[kontakt] sent ok', {
+      lang,
       internalId: (r1 as any)?.data?.id ?? (r1 as any)?.id,
       customerId: (r2 as any)?.data?.id ?? (r2 as any)?.id,
       toInternal: TO_INTERNAL,

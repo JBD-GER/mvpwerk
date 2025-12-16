@@ -2,7 +2,9 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 
+type Lang = 'de' | 'en'
 type Faq = { q: string; a: string }
 
 function Chevron({ open }: { open: boolean }) {
@@ -23,34 +25,58 @@ function Chevron({ open }: { open: boolean }) {
 }
 
 export default function FaqSection() {
+  const searchParams = useSearchParams()
+  const lang = ((searchParams?.get('lang') as Lang) || 'de') satisfies Lang
+
   const faqs = useMemo<Faq[]>(
     () => [
       {
-        q: 'Wie schnell ist eine erste Version online?',
-        a: 'Typisch sehen Sie nach kurzer Zeit eine klickbare Version. Je nach Umfang kann eine erste nutzbare MVP-Version oft innerhalb von 4–8 Wochen live gehen.',
+        q: lang === 'de' ? 'Wie schnell ist eine erste Version online?' : 'How fast can the first version go live?',
+        a:
+          lang === 'de'
+            ? 'Typisch sehen Sie nach kurzer Zeit eine klickbare Version. Je nach Umfang kann eine erste nutzbare MVP-Version oft innerhalb von 4–8 Wochen live gehen.'
+            : 'Typically, you’ll see a clickable version quickly. Depending on scope, a first usable MVP can often go live within 4–8 weeks.',
       },
       {
-        q: 'Was kostet ein MVP ungefähr?',
-        a: 'Das hängt primär vom Scope ab. Wir schneiden den Umfang so zu, dass er ins Budget passt (Muss/Soll/Später). Sie bekommen eine klare Einschätzung, bevor wir bauen.',
+        q: lang === 'de' ? 'Was kostet ein MVP ungefähr?' : 'Roughly, what does an MVP cost?',
+        a:
+          lang === 'de'
+            ? 'Das hängt primär vom Scope ab. Wir schneiden den Umfang so zu, dass er ins Budget passt (Muss/Soll/Später). Sie bekommen eine klare Einschätzung, bevor wir bauen.'
+            : 'It mainly depends on scope. We shape the scope to fit your budget (must/should/later). You’ll get a clear estimate before we build.',
       },
       {
-        q: 'Baut ihr nur „Software“ oder auch die Website/Landingpage?',
-        a: 'Beides. Website (SEO/Marketing) und App kommen aus einem Guss – so sparen Sie Abstimmung, Zeit und doppelte Arbeit.',
+        q:
+          lang === 'de'
+            ? 'Baut ihr nur „Software“ oder auch die Website/Landingpage?'
+            : 'Do you build only the app, or also the website/landing page?',
+        a:
+          lang === 'de'
+            ? 'Beides. Website (SEO/Marketing) und App kommen aus einem Guss – so sparen Sie Abstimmung, Zeit und doppelte Arbeit.'
+            : 'Both. Website (SEO/marketing) and app are built as one system — saving time, coordination, and duplicate work.',
       },
       {
-        q: 'Können wir bestehende Systeme anbinden?',
-        a: 'Ja. Wir bauen Backend, APIs und Integrationen so, dass Daten sauber fließen (z. B. CRM, Buchhaltung, Tools, interne Systeme) – je nachdem, was Sie brauchen.',
+        q: lang === 'de' ? 'Können wir bestehende Systeme anbinden?' : 'Can you integrate existing systems?',
+        a:
+          lang === 'de'
+            ? 'Ja. Wir bauen Backend, APIs und Integrationen so, dass Daten sauber fließen (z. B. CRM, Buchhaltung, Tools, interne Systeme) – je nachdem, was Sie brauchen.'
+            : 'Yes. We build backend, APIs, and integrations so data flows cleanly (e.g., CRM, accounting, tools, internal systems) — depending on what you need.',
       },
       {
-        q: 'Wie läuft die Zusammenarbeit ab?',
-        a: 'Klar in Phasen: Scope/Plan → Design & Entwicklung → Deployment/Launch. Sie sehen regelmäßig Fortschritt und testen früh – statt am Ende überrascht zu werden.',
+        q: lang === 'de' ? 'Wie läuft die Zusammenarbeit ab?' : 'How does the collaboration work?',
+        a:
+          lang === 'de'
+            ? 'Klar in Phasen: Scope/Plan → Design & Entwicklung → Deployment/Launch. Sie sehen regelmäßig Fortschritt und testen früh – statt am Ende überrascht zu werden.'
+            : 'Clear phases: scope/plan → design & development → deployment/launch. You see progress regularly and test early — no end-of-project surprises.',
       },
       {
-        q: 'Hab ich am Ende Lock-in oder gehört mir alles?',
-        a: 'Kein Lock-in. Repo, Assets und Zugänge sind sauber übergabefähig. Sie können später mit uns weiterbauen oder mit einem anderen Team.',
+        q: lang === 'de' ? 'Hab ich am Ende Lock-in oder gehört mir alles?' : 'Is there lock-in, or do I own everything?',
+        a:
+          lang === 'de'
+            ? 'Kein Lock-in. Repo, Assets und Zugänge sind sauber übergabefähig. Sie können später mit uns weiterbauen oder mit einem anderen Team.'
+            : 'No lock-in. Repo, assets, and access are handed over cleanly. You can continue with us later or with another team.',
       },
     ],
-    []
+    [lang]
   )
 
   const [openIdx, setOpenIdx] = useState<number | null>(0)
@@ -69,11 +95,13 @@ export default function FaqSection() {
           </div>
 
           <h2 className="mt-4 text-[26px] font-semibold leading-[1.08] tracking-tight text-slate-900 sm:text-[38px] md:text-[44px]">
-            Kurz beantwortet – bevor Sie anfragen.
+            {lang === 'de' ? 'Kurz beantwortet – bevor Sie anfragen.' : 'Answered upfront — before you reach out.'}
           </h2>
 
           <p className="mt-3 text-[14px] leading-relaxed text-slate-700 sm:text-[15px]">
-            Die häufigsten Fragen von Geschäftsführern, die eine MVP Agentur suchen.
+            {lang === 'de'
+              ? 'Die häufigsten Fragen von Geschäftsführern, die eine MVP Agentur suchen.'
+              : 'The most common questions from founders and decision-makers looking for an MVP agency.'}
           </p>
         </div>
 
@@ -116,7 +144,9 @@ export default function FaqSection() {
         </div>
 
         <div className="mt-4 text-center text-[11px] text-slate-600">
-          Noch etwas offen? Dann einfach kurz schildern – wir sagen Ihnen direkt, ob und wie wir helfen können.
+          {lang === 'de'
+            ? 'Noch etwas offen? Dann einfach kurz schildern – wir sagen Ihnen direkt, ob und wie wir helfen können.'
+            : 'Still unsure about something? Send a quick note — we’ll tell you directly if and how we can help.'}
         </div>
       </div>
     </section>

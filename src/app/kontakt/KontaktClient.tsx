@@ -1,13 +1,39 @@
+// src/app/(...)/KontaktClient.tsx
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useMemo, useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 type Status = 'idle' | 'loading' | 'success' | 'error'
+type Lang = 'de' | 'en'
+
+const LANG_COOKIE = 'mvpwerk_lang'
+
+function normalizeLang(v: string | null | undefined): Lang | null {
+  if (!v) return null
+  const s = v.toLowerCase()
+  if (s === 'de' || s.startsWith('de-')) return 'de'
+  if (s === 'en' || s.startsWith('en-')) return 'en'
+  return null
+}
+
+function readCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null
+  const match = document.cookie.match(
+    new RegExp('(?:^|; )' + name.replace(/[$()*+./?[\\\]^{|}-]/g, '\\$&') + '=([^;]*)')
+  )
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+function detectBrowserLang(): Lang {
+  if (typeof navigator === 'undefined') return 'de'
+  return normalizeLang(navigator.language) ?? 'de'
+}
 
 export default function KontaktClient() {
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const [status, setStatus] = useState<Status>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -23,6 +49,105 @@ export default function KontaktClient() {
 
   // honeypot
   const [website, setWebsite] = useState('')
+
+  // ✅ aktuelle Sprache
+  const [lang, setLang] = useState<Lang>('de')
+
+  useEffect(() => {
+    const q = normalizeLang(searchParams?.get('lang'))
+    if (q) return setLang(q)
+
+    const c = normalizeLang(readCookie(LANG_COOKIE))
+    setLang(c ?? detectBrowserLang())
+  }, [searchParams])
+
+  const t = useMemo(() => {
+    if (lang === 'en') {
+      return {
+        title: 'Contact',
+        subtitle: 'Required: First name, last name, email, phone + checkboxes.',
+        sent: 'Sent ✓',
+
+        firstNameLabel: 'First name *',
+        lastNameLabel: 'Last name *',
+        emailLabel: 'Email *',
+        phoneLabel: 'Phone *',
+        messageLabel: 'Short description (optional)',
+
+        firstNamePh: 'Max',
+        lastNamePh: 'Doe',
+        emailPh: 'max@company.com',
+        phonePh: '+49 …',
+        messagePh: 'What is it about? (1–2 sentences are enough)',
+
+        privacyPrefix: 'I accept the',
+        privacyLink: 'Privacy Policy',
+        agbPrefix: 'I accept the',
+        agbLink: 'Terms (AGB)',
+
+        submit: 'Send request',
+        sending: 'Sending…',
+
+        footerHint: 'No obligation · Reply usually the same day',
+
+        // fallback errors (wenn server nichts liefert)
+        genericError: 'Please check your inputs.',
+        unknownError: 'Unknown error',
+      }
+    }
+
+    return {
+      title: 'Kontakt',
+      subtitle: 'Pflichtfelder: Vorname, Nachname, E-Mail, Telefon + Checkboxen.',
+      sent: 'Gesendet ✓',
+
+      firstNameLabel: 'Vorname *',
+      lastNameLabel: 'Nachname *',
+      emailLabel: 'E-Mail *',
+      phoneLabel: 'Telefon *',
+      messageLabel: 'Kurzbeschreibung (optional)',
+
+      firstNamePh: 'Max',
+      lastNamePh: 'Mustermann',
+      emailPh: 'max@firma.de',
+      phonePh: '+49 …',
+      messagePh: 'Worum geht’s? (1–2 Sätze reichen)',
+
+      privacyPrefix: 'Ich akzeptiere die',
+      privacyLink: 'Datenschutzerklärung',
+      agbPrefix: 'Ich akzeptiere die',
+      agbLink: 'AGB',
+
+      submit: 'Anfrage senden',
+      sending: 'Senden…',
+
+      footerHint: 'Unverbindlich · Antwort meist am selben Tag',
+
+      genericError: 'Bitte prüfen Sie Ihre Eingaben.',
+      unknownError: 'Unbekannter Fehler',
+    }
+  }, [lang])
+
+  // ✅ Links behalten ?lang=
+  const hrefWithLang = (href: string) => {
+    const params = new URLSearchParams(searchParams?.toString() || '')
+    params.set('lang', lang)
+    const qs = params.toString()
+    return qs ? `${href}?${qs}` : href
+  }
+
+  // Optional: kleine Übersetzung bekannter Server-Fehler (damit EN nicht deutsch wirkt)
+  function mapServerError(msg: string): string {
+    if (lang === 'de') return msg
+
+    const m = (msg || '').toLowerCase()
+    if (m.includes('pflichtfelder')) return 'Please fill in all required fields.'
+    if (m.includes('gültige e-mail') || m.includes('gültige e-mail-adresse'))
+      return 'Please enter a valid email address.'
+    if (m.includes('datenschutz') && m.includes('agb')) return 'Please accept Privacy Policy & Terms.'
+    if (m.includes('serverfehler')) return 'Server error.'
+    return msg // fallback: zeig original
+  }
 
   const canSubmit = useMemo(() => {
     return (
@@ -54,21 +179,24 @@ export default function KontaktClient() {
           acceptPrivacy,
           acceptAgb,
           website,
+          lang,
+          siteUrl: typeof window !== 'undefined' ? window.location.origin : undefined,
         }),
       })
 
       const data = await res.json().catch(() => null)
       if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || 'Bitte prüfen Sie Ihre Eingaben.')
+        throw new Error(data?.error || t.genericError)
       }
 
       setStatus('success')
 
-      // ✅ direkt weiterleiten
-      router.push('/danke')
+      // ✅ danke Seite mit gleicher Sprache
+      router.push(`/danke?lang=${lang}`)
     } catch (err: any) {
       setStatus('error')
-      setError(err?.message || 'Unbekannter Fehler')
+      const msg = err?.message || t.unknownError
+      setError(mapServerError(msg))
     }
   }
 
@@ -87,72 +215,66 @@ export default function KontaktClient() {
       <div className="relative">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="text-[12px] font-semibold text-slate-900">Kontakt</div>
-            <p className="mt-1 text-[12px] leading-relaxed text-slate-600">
-              Pflichtfelder: Vorname, Nachname, E-Mail, Telefon + Checkboxen.
-            </p>
+            <div className="text-[12px] font-semibold text-slate-900">{t.title}</div>
+            <p className="mt-1 text-[12px] leading-relaxed text-slate-600">{t.subtitle}</p>
           </div>
 
           {status === 'success' ? (
             <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-medium text-emerald-900">
-              Gesendet ✓
+              {t.sent}
             </span>
           ) : null}
         </div>
 
         {/* Formular */}
         <form onSubmit={onSubmit} className="mt-5 space-y-3">
-          {/* Honeypot (unsichtbar) */}
+          {/* Honeypot */}
           <div className="hidden">
             <label className="text-[12px] text-slate-700">
               Website
-              <input
-                value={website}
-                onChange={(e) => setWebsite(e.target.value)}
-                className={inputBase}
-              />
+              <input value={website} onChange={(e) => setWebsite(e.target.value)} className={inputBase} />
             </label>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Vorname *">
+            <Field label={t.firstNameLabel}>
               <input
                 required
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 className={inputBase}
-                placeholder="Max"
+                placeholder={t.firstNamePh}
                 autoComplete="given-name"
               />
             </Field>
 
-            <Field label="Nachname *">
+            <Field label={t.lastNameLabel}>
               <input
                 required
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 className={inputBase}
-                placeholder="Mustermann"
+                placeholder={t.lastNamePh}
                 autoComplete="family-name"
               />
             </Field>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="E-Mail *">
+            <Field label={t.emailLabel}>
               <input
                 required
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className={inputBase}
-                placeholder="max@firma.de"
+                placeholder={t.emailPh}
                 autoComplete="email"
                 inputMode="email"
               />
             </Field>
 
-            <Field label="Telefon *">
+            <Field label={t.phoneLabel}>
               <input
                 required
                 type="tel"
@@ -160,19 +282,19 @@ export default function KontaktClient() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className={inputBase}
-                placeholder="+49 ..."
+                placeholder={t.phonePh}
                 autoComplete="tel"
               />
             </Field>
           </div>
 
-          <Field label="Kurzbeschreibung (optional)">
+          <Field label={t.messageLabel}>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={4}
               className={textareaBase}
-              placeholder="Worum geht’s? (1–2 Sätze reichen)"
+              placeholder={t.messagePh}
             />
           </Field>
 
@@ -182,9 +304,14 @@ export default function KontaktClient() {
               onChange={setAcceptPrivacy}
               label={
                 <>
-                  Ich akzeptiere die{' '}
-                  <Link href="/datenschutz" className="font-medium text-slate-900 underline underline-offset-2">
-                    Datenschutzerklärung
+                  {t.privacyPrefix}{' '}
+                  <Link
+                    href={hrefWithLang('/datenschutz')}
+                            target="_blank"
+        rel="noopener noreferrer"
+                    className="font-medium text-slate-900 underline underline-offset-2"
+                  >
+                    {t.privacyLink}
                   </Link>{' '}
                   *
                 </>
@@ -195,9 +322,10 @@ export default function KontaktClient() {
               onChange={setAcceptAgb}
               label={
                 <>
-                  Ich akzeptiere die{' '}
-                  <Link href="/agb" className="font-medium text-slate-900 underline underline-offset-2">
-                    AGB
+                  {t.agbPrefix}{' '}
+                  <Link href={hrefWithLang('/agb')}          target="_blank"
+        rel="noopener noreferrer" className="font-medium text-slate-900 underline underline-offset-2">
+                    {t.agbLink}
                   </Link>{' '}
                   *
                 </>
@@ -206,9 +334,7 @@ export default function KontaktClient() {
           </div>
 
           {status === 'error' ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-[12px] text-rose-900">
-              {error}
-            </div>
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-[12px] text-rose-900">{error}</div>
           ) : null}
 
           <button
@@ -221,11 +347,11 @@ export default function KontaktClient() {
                 : 'cursor-not-allowed bg-slate-900/40 text-white/80',
             ].join(' ')}
           >
-            {status === 'loading' ? 'Senden…' : 'Anfrage senden'}
+            {status === 'loading' ? t.sending : t.submit}
             <span className="ml-2 inline-block transition group-hover:translate-x-0.5">→</span>
           </button>
 
-          <div className="text-center text-[11px] text-slate-600">Unverbindlich · Antwort meist am selben Tag</div>
+          <div className="text-center text-[11px] text-slate-600">{t.footerHint}</div>
         </form>
       </div>
 
