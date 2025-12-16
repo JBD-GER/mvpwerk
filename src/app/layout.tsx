@@ -1,3 +1,4 @@
+// src/app/layout.tsx
 import './globals.css'
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
@@ -8,6 +9,14 @@ import ConsentBanner from '@/app/components/ConsentBanner'
 import Header from '@/app/components/Header'
 import Footer from '@/app/components/Footer'
 import GoogleTag from '@/app/components/GoogleTag'
+
+/**
+ * ✅ Wichtig für deine ?lang=… Logik:
+ * Damit Seiten wirklich pro Request anhand der SearchParams rendern
+ * (und nicht statisch “festgebacken” sind).
+ */
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 const inter = Inter({
   subsets: ['latin'],
@@ -85,7 +94,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="de" className={inter.variable}>
       <body className="bg-white font-sans text-slate-900">
-        {/* ✅ FIX: Alles, was useSearchParams nutzt, liegt jetzt innerhalb Suspense */}
+        {/* ✅ Alles, was useSearchParams nutzt, liegt innerhalb Suspense */}
         <Suspense fallback={null}>
           <div className="min-h-screen">
             <Header />
