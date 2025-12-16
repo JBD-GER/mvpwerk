@@ -1,6 +1,8 @@
 import './globals.css'
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
+import { Suspense } from 'react'
+
 import GlobalCTA from './components/GlobalCTA'
 import ConsentBanner from '@/app/components/ConsentBanner'
 import Header from '@/app/components/Header'
@@ -81,12 +83,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="de" className={`${inter.variable}`}>
-      <body className="font-sans bg-white text-slate-900">
+    <html lang="de" className={inter.variable}>
+      <body className="bg-white font-sans text-slate-900">
         <div className="min-h-screen">
-          <Header />
+          {/* ✅ FIX: Header (oder ein Child davon) nutzt useSearchParams() → Suspense drum */}
+          <Suspense fallback={null}>
+            <Header />
+          </Suspense>
+
           <div aria-hidden className="h-16" />
+
           {children}
+
           <GlobalCTA />
 
           {/* ✅ Google Ads Tag (lädt erst nach Consent) */}
