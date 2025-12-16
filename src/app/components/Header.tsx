@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
+import { startTransition, useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 type Lang = 'de' | 'en'
@@ -71,45 +71,34 @@ export default function Header() {
   const [open, setOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
 
-  // ✅ initial: cookie -> browser (damit UI sofort korrekt ist)
-  const [lang, setLang] = useState<Lang>(() => {
-    const c = normalizeLang(readCookie(LANG_COOKIE))
-    return c ?? detectBrowserLang()
-  })
+  // ✅ Hydration-safe initial state: NICHT Cookie/Browser!
+  // Server rendert immer stabil "de", Client hydratisiert identisch -> kein mismatch
+  const [lang, setLang] = useState<Lang>('de')
 
-  // für stabile deps
   const spKey = useMemo(() => searchParams?.toString() ?? '', [searchParams])
 
-  const syncingRef = useRef(false)
-
-  // ✅ Resolve lang: query -> cookie -> browser; sync cookie + URL
+  // ✅ Nach dem Mount: URL -> Cookie -> Browser, und URL ggf. korrigieren + refresh für Server-Content
   useEffect(() => {
-    if (syncingRef.current) return
-    syncingRef.current = true
-
     const q = normalizeLang(searchParams?.get('lang'))
-    if (q) {
-      // URL ist source of truth
-      if (q !== lang) setLang(q)
-      writeLangCookie(q)
-      syncingRef.current = false
-      return
+    const c = normalizeLang(readCookie(LANG_COOKIE))
+    const desired = q ?? c ?? detectBrowserLang()
+
+    // state/cookie immer angleichen
+    if (desired !== lang) setLang(desired)
+    writeLangCookie(desired)
+
+    // wenn URL kein lang oder anderes lang: URL korrigieren + Server-Content neu laden
+    if (q !== desired) {
+      const params = new URLSearchParams(spKey)
+      params.set('lang', desired)
+
+      startTransition(() => {
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+        router.refresh()
+      })
     }
-
-    // kein lang in URL -> nutze state (cookie/browser) und schreibe einmal rein
-    writeLangCookie(lang)
-
-    const params = new URLSearchParams(spKey)
-    params.set('lang', lang)
-
-    startTransition(() => {
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false })
-      router.refresh() // ✅ wichtig für Server-Content
-    })
-
-    syncingRef.current = false
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, spKey]) // absichtlich NICHT lang als dep
+  }, [pathname, spKey]) // absichtlich ohne "lang" als dep (sonst unnötige Loops)
 
   const t = useMemo(() => {
     return lang === 'de'
@@ -157,13 +146,12 @@ export default function Header() {
     const params = new URLSearchParams(spKey)
     params.set('lang', next)
 
-    // ✅ Mobile: direkt alles schließen, sonst fühlt es sich "nicht übernommen" an
     setLangOpen(false)
     setOpen(false)
 
     startTransition(() => {
       router.replace(`${pathname}?${params.toString()}`, { scroll: false })
-      router.refresh() // ✅ DAS ist der “1. Klick wirkt nicht”-Fix
+      router.refresh() // ✅ wichtig: Server-Komponenten ziehen neuen lang
     })
   }
 
