@@ -4,6 +4,14 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useMemo, useState } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
+import {
+  SparklesIcon,
+  CodeBracketIcon,
+  Squares2X2Icon,
+  CloudIcon,
+  CpuChipIcon,
+  LinkIcon,
+} from '@heroicons/react/24/outline'
 
 type Lang = 'de' | 'en'
 
@@ -43,12 +51,23 @@ function Flag({ lang }: { lang: Lang }) {
   )
 }
 
+type Solution = {
+  href: string
+  icon: React.ComponentType<{ className?: string }>
+  labelDe: string
+  labelEn: string
+  descDe: string
+  descEn: string
+}
+
 export default function Header() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
   const [open, setOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
+  const [solutionsOpen, setSolutionsOpen] = useState(false)
+  const [solutionsMobileOpen, setSolutionsMobileOpen] = useState(true)
 
   // ✅ EINZIGE WAHRHEIT: URL
   const lang: Lang = useMemo(() => normalizeLang(searchParams?.get('lang')) ?? 'de', [searchParams])
@@ -56,27 +75,99 @@ export default function Header() {
   const t = useMemo(() => {
     return lang === 'de'
       ? {
-          nav: { home: 'Startseite', services: 'Leistungen', funding: 'Förderung', faq: 'FAQ' },
+          nav: {
+            home: 'Startseite',
+            solutions: 'Lösungen',
+            services: 'Leistungen',
+            funding: 'Förderung',
+            faq: 'FAQ',
+          },
           contact: 'Kontakt',
           language: 'Sprache',
           chooseLang: 'Sprache wählen',
           menuOpen: 'Menü öffnen',
+          solutionsTitle: 'Unsere Lösungen',
+          solutionsHint: 'Schnell zu den Spezialseiten',
         }
       : {
-          nav: { home: 'Home', services: 'Services', funding: 'Funding', faq: 'FAQ' },
+          nav: {
+            home: 'Home',
+            solutions: 'Solutions',
+            services: 'Services',
+            funding: 'Funding',
+            faq: 'FAQ',
+          },
           contact: 'Contact',
           language: 'Language',
           chooseLang: 'Choose language',
           menuOpen: 'Open menu',
+          solutionsTitle: 'Our solutions',
+          solutionsHint: 'Jump to specialized pages',
         }
   }, [lang])
 
+  const solutions: Solution[] = useMemo(
+    () => [
+      // ✅ Reihenfolge wie gewünscht: KI -> Software -> Web App -> Rest egal
+      {
+        href: '/loesungen/ki-entwicklung',
+        icon: SparklesIcon,
+        labelDe: 'KI Entwicklung',
+        labelEn: 'AI Development',
+        descDe: 'LLMs, Automationen, Assistants, RAG & Integrationen.',
+        descEn: 'LLMs, automation, assistants, RAG & integrations.',
+      },
+      {
+        href: '/loesungen/software-entwicklung',
+        icon: CodeBracketIcon,
+        labelDe: 'Softwareentwicklung',
+        labelEn: 'Software Development',
+        descDe: 'B2B Web-Software, Workflows, Rollen, Prozesse.',
+        descEn: 'B2B software, workflows, roles, processes.',
+      },
+      {
+        href: '/loesungen/web-app-entwicklung',
+        icon: Squares2X2Icon,
+        labelDe: 'Web App Entwicklung',
+        labelEn: 'Web App Development',
+        descDe: 'Next.js Apps, Dashboards, Portale, SaaS.',
+        descEn: 'Next.js apps, dashboards, portals, SaaS.',
+      },
+      {
+        href: '/loesungen/cloud-entwicklung',
+        icon: CloudIcon,
+        labelDe: 'Cloud Entwicklung',
+        labelEn: 'Cloud Development',
+        descDe: 'Architektur, Deployments, Skalierung, Observability.',
+        descEn: 'Architecture, deployments, scaling, observability.',
+      },
+      {
+        href: '/loesungen/iot-entwicklung',
+        icon: CpuChipIcon,
+        labelDe: 'IoT Entwicklung',
+        labelEn: 'IoT Development',
+        descDe: 'Devices → Cloud → Dashboard, Telemetrie, OTA.',
+        descEn: 'Devices → cloud → dashboard, telemetry, OTA.',
+      },
+      {
+        href: '/loesungen/blockchain-entwicklung',
+        icon: LinkIcon,
+        labelDe: 'Blockchain Entwicklung',
+        labelEn: 'Blockchain Development',
+        descDe: 'Smart Contracts, Integrationen, Security & Betrieb.',
+        descEn: 'Smart contracts, integrations, security & ops.',
+      },
+    ],
+    []
+  )
+
   const items = useMemo(
     () => [
-      { href: '/', label: t.nav.home },
+      // Lösungen kommt als Dropdown-Button (nicht als Link)
       { href: '/leistungen', label: t.nav.services },
       { href: '/foerderung-checker', label: t.nav.funding },
       { href: '/faq', label: t.nav.faq },
+      { href: '/', label: t.nav.home },
     ],
     [t]
   )
@@ -92,6 +183,7 @@ export default function Header() {
     if (next === lang) {
       setLangOpen(false)
       setOpen(false)
+      setSolutionsOpen(false)
       return
     }
 
@@ -102,14 +194,18 @@ export default function Header() {
 
     setLangOpen(false)
     setOpen(false)
+    setSolutionsOpen(false)
 
     // ✅ “Refresh” der aktuellen Seite – 100% zuverlässig
     window.location.assign(url)
   }
 
+  const solutionsActive = useMemo(() => pathname?.startsWith('/loesungen'), [pathname])
+
   useEffect(() => {
     setOpen(false)
     setLangOpen(false)
+    setSolutionsOpen(false)
   }, [pathname, lang])
 
   useEffect(() => {
@@ -117,6 +213,7 @@ export default function Header() {
       if (e.key === 'Escape') {
         setOpen(false)
         setLangOpen(false)
+        setSolutionsOpen(false)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -132,6 +229,16 @@ export default function Header() {
     window.addEventListener('mousedown', onClick)
     return () => window.removeEventListener('mousedown', onClick)
   }, [langOpen])
+
+  useEffect(() => {
+    if (!solutionsOpen) return
+    const onClick = (e: MouseEvent) => {
+      const el = e.target as HTMLElement
+      if (!el.closest?.('[data-solutions-root="1"]')) setSolutionsOpen(false)
+    }
+    window.addEventListener('mousedown', onClick)
+    return () => window.removeEventListener('mousedown', onClick)
+  }, [solutionsOpen])
 
   return (
     <>
@@ -151,6 +258,130 @@ export default function Header() {
 
           {/* Desktop nav */}
           <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-7 text-sm md:flex">
+            {/* Lösungen Dropdown */}
+            <div className="relative" data-solutions-root="1">
+              <button
+                type="button"
+                onClick={() => {
+                  setSolutionsOpen((v) => !v)
+                  setLangOpen(false)
+                }}
+                aria-expanded={solutionsOpen}
+                aria-haspopup="menu"
+                className={[
+                  'inline-flex items-center gap-2 transition-colors',
+                  solutionsActive ? 'font-semibold text-slate-900' : 'text-slate-700 hover:text-slate-900',
+                ].join(' ')}
+              >
+                {t.nav.solutions}
+                <svg
+                  viewBox="0 0 24 24"
+                  className={['h-4 w-4 text-slate-600 transition', solutionsOpen ? 'rotate-180' : 'rotate-0'].join(' ')}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
+
+              {solutionsOpen ? (
+                <div className="absolute left-1/2 mt-3 w-[760px] -translate-x-1/2 overflow-hidden rounded-3xl border border-slate-900/10 bg-white/80 shadow-[0_30px_120px_rgba(15,23,42,0.16)] backdrop-blur">
+                  <div className="grid grid-cols-[1fr_220px]">
+                    {/* Left: Grid */}
+                    <div className="p-3">
+                      <div className="px-2 pb-2">
+                        <div className="text-sm font-medium text-slate-900">{t.solutionsTitle}</div>
+                        <div className="text-xs text-slate-500">{t.solutionsHint}</div>
+                      </div>
+
+                      <div className="grid gap-2 md:grid-cols-2">
+                        {solutions.map((s) => {
+                          const Icon = s.icon
+                          const label = lang === 'de' ? s.labelDe : s.labelEn
+                          const desc = lang === 'de' ? s.descDe : s.descEn
+                          const active = pathname === s.href
+                          return (
+                            <Link
+                              key={s.href}
+                              href={hrefWithLang(s.href)}
+                              onClick={() => setSolutionsOpen(false)}
+                              className={[
+                                'group flex items-start gap-3 rounded-2xl border border-transparent px-3 py-3 transition',
+                                active
+                                  ? 'border-slate-900/10 bg-slate-900 text-white'
+                                  : 'hover:border-slate-900/10 hover:bg-white',
+                              ].join(' ')}
+                            >
+                              <span
+                                className={[
+                                  'mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-2xl border shadow-sm backdrop-blur',
+                                  active
+                                    ? 'border-white/20 bg-white/10 text-white'
+                                    : 'border-white/60 bg-white/70 text-slate-900',
+                                ].join(' ')}
+                              >
+                                <Icon className="h-5 w-5" />
+                              </span>
+
+                              <span className="min-w-0">
+                                <span className={['block text-sm font-semibold', active ? 'text-white' : 'text-slate-900'].join(' ')}>
+                                  {label}
+                                </span>
+                                <span className={['mt-0.5 block text-xs leading-relaxed', active ? 'text-white/80' : 'text-slate-600'].join(' ')}>
+                                  {desc}
+                                </span>
+                              </span>
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Right: Quick CTA / Info rail */}
+                    <div className="border-l border-slate-900/10 bg-gradient-to-b from-slate-900/[0.03] to-transparent p-4">
+                      <div className="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur">
+                        <div className="text-xs font-semibold text-slate-900">
+                          {lang === 'de' ? 'Nicht sicher, was passt?' : 'Not sure what fits?'}
+                        </div>
+                        <p className="mt-2 text-xs leading-relaxed text-slate-600">
+                          {lang === 'de'
+                            ? 'Beschreiben Sie kurz Ihr Ziel – wir sagen Ihnen, welche Lösung (und welcher Einstieg) am besten ist.'
+                            : 'Tell us your goal — we’ll recommend the best solution and the right starting point.'}
+                        </p>
+                        <Link
+                          href={hrefWithLang('/kontakt')}
+                          onClick={() => setSolutionsOpen(false)}
+                          className={[
+                            'mt-3 inline-flex w-full items-center justify-center rounded-full px-4 py-2 text-xs font-semibold',
+                            'border border-slate-900/10 bg-slate-900 text-white shadow-sm transition hover:bg-slate-800',
+                            'focus:outline-none focus:ring-2 focus:ring-indigo-200/70',
+                          ].join(' ')}
+                        >
+                          {lang === 'de' ? 'Kontakt →' : 'Contact →'}
+                        </Link>
+                      </div>
+
+                      <div className="mt-3 rounded-2xl border border-white/60 bg-white/60 p-4 text-xs text-slate-600 shadow-sm backdrop-blur">
+                        <div className="font-semibold text-slate-900">
+                          {lang === 'de' ? 'Tipp' : 'Tip'}
+                        </div>
+                        <div className="mt-1 leading-relaxed">
+                          {lang === 'de'
+                            ? 'Alle Lösungen sind auf B2B-Umsetzung, Security und Betrieb ausgelegt.'
+                            : 'All solutions focus on B2B delivery, security and operational readiness.'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Restliche Nav Links */}
             {items.map((item) => {
               const active = pathname === item.href
               return (
@@ -175,7 +406,10 @@ export default function Header() {
             <div className="relative hidden md:block" data-lang-root="1">
               <button
                 type="button"
-                onClick={() => setLangOpen((v) => !v)}
+                onClick={() => {
+                  setLangOpen((v) => !v)
+                  setSolutionsOpen(false)
+                }}
                 aria-expanded={langOpen}
                 aria-label={t.chooseLang}
                 className={[
@@ -250,7 +484,11 @@ export default function Header() {
             <button
               type="button"
               className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-900/10 bg-white shadow-sm md:hidden"
-              onClick={() => setOpen((v) => !v)}
+              onClick={() => {
+                setOpen((v) => !v)
+                setLangOpen(false)
+                setSolutionsOpen(false)
+              }}
               aria-label={t.menuOpen}
               aria-expanded={open}
             >
@@ -277,6 +515,68 @@ export default function Header() {
             <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
               <div className="mt-3 overflow-hidden rounded-2xl border border-slate-900/10 bg-white shadow-[0_20px_70px_rgba(15,23,42,0.12)]">
                 <nav className="p-2">
+                  {/* Lösungen (mobile) */}
+                  <div className="rounded-xl border border-slate-900/10 bg-white/70 p-2">
+                    <button
+                      type="button"
+                      onClick={() => setSolutionsMobileOpen((v) => !v)}
+                      className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm font-semibold text-slate-900"
+                      aria-expanded={solutionsMobileOpen}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/60 bg-white/70 shadow-sm">
+                          <Squares2X2Icon className="h-4 w-4 text-slate-900" />
+                        </span>
+                        {t.nav.solutions}
+                      </span>
+                      <svg
+                        viewBox="0 0 24 24"
+                        className={['h-4 w-4 text-slate-600 transition', solutionsMobileOpen ? 'rotate-180' : 'rotate-0'].join(' ')}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden
+                      >
+                        <path d="M6 9l6 6 6-6" />
+                      </svg>
+                    </button>
+
+                    {solutionsMobileOpen ? (
+                      <div className="mt-1 grid gap-1">
+                        {solutions.map((s) => {
+                          const Icon = s.icon
+                          const label = lang === 'de' ? s.labelDe : s.labelEn
+                          const active = pathname === s.href
+                          return (
+                            <Link
+                              key={s.href}
+                              href={hrefWithLang(s.href)}
+                              onClick={() => setOpen(false)}
+                              aria-current={active ? 'page' : undefined}
+                              className={[
+                                'flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition',
+                                active ? 'bg-slate-900 text-white' : 'text-slate-800 hover:bg-slate-900/5',
+                              ].join(' ')}
+                            >
+                              <span
+                                className={[
+                                  'inline-flex h-9 w-9 items-center justify-center rounded-xl border shadow-sm',
+                                  active ? 'border-white/20 bg-white/10' : 'border-white/60 bg-white/70',
+                                ].join(' ')}
+                              >
+                                <Icon className={['h-4 w-4', active ? 'text-white' : 'text-slate-900'].join(' ')} />
+                              </span>
+                              <span className="font-medium">{label}</span>
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {/* Standard Links */}
                   {items.map((item) => {
                     const active = pathname === item.href
                     return (
@@ -286,7 +586,7 @@ export default function Header() {
                         onClick={() => setOpen(false)}
                         aria-current={active ? 'page' : undefined}
                         className={[
-                          'block rounded-xl px-3 py-2 text-sm transition',
+                          'mt-2 block rounded-xl px-3 py-2 text-sm transition',
                           active ? 'bg-slate-900 text-white' : 'text-slate-800 hover:bg-slate-900/5',
                         ].join(' ')}
                       >

@@ -43,7 +43,7 @@ export default function HeroSection({ lang }: { lang: Lang }) {
         kpis: [
           { k: 'Performance', v: '90+ Lighthouse' },
           { k: 'Transparenz', v: '1×/Woche Demo' },
-          { k: 'Projekte', v: '25+ umgesetzt' },
+          { k: 'API-Entwicklung', v: '< 200ms Ø Response Time' },
           { k: 'Ownership', v: 'Code gehört Ihnen' },
         ],
         ratingTitle: '4,9/5 · Kundenbewertung',

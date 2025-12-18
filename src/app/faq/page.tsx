@@ -7,6 +7,9 @@ type Lang = 'de' | 'en'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mvpwerk.de'
+const CANONICAL_PATH = '/faq'
+
 function normalizeLang(v: unknown): Lang | null {
   if (!v) return null
   const s = Array.isArray(v) ? String(v[0] ?? '') : String(v)
@@ -25,6 +28,7 @@ function toFaqJsonLd(faqs: { q: string; a: string }[]) {
       name: f.q,
       acceptedAnswer: {
         '@type': 'Answer',
+        // Achtung: Schema.org Answer text darf HTML enthalten – du nutzt <br/> korrekt.
         text: f.a.replace(/\n/g, '<br/>'),
       },
     })),
@@ -181,7 +185,23 @@ function getT(lang: Lang) {
       metaTitle: 'FAQ – MVPWERK',
       metaDesc:
         'Answers to the most important questions about MVPWERK: MVP agency, software development, cost, timeline, tech stack, ownership, maintenance and collaboration.',
-      ogDesc: 'Everything you need to know about MVPWERK: build an MVP, budget, timeline, tech stack and process.',
+      ogDesc:
+        'Everything you need to know about MVPWERK: building an MVP, budget, timeline, tech stack and process.',
+      keywords: [
+        'mvp agency',
+        'mvp development',
+        'mvp development agency',
+        'mvp cost',
+        'build an mvp',
+        'web app development',
+        'saas development',
+        'next.js',
+        'supabase',
+        'vercel',
+        'stripe',
+        'roles and permissions',
+        'rls',
+      ],
 
       home: 'Home',
       faq: 'FAQ',
@@ -227,6 +247,21 @@ function getT(lang: Lang) {
     metaDesc:
       'Antworten auf die wichtigsten Fragen zu MVPWERK: MVP Agentur, Softwareentwicklung, Kosten, Timeline, Tech-Stack, Ownership, Wartung und Zusammenarbeit.',
     ogDesc: 'Alles Wichtige rund um MVPWERK: MVP entwickeln lassen, Budget, Dauer, Tech-Stack und Prozess.',
+    keywords: [
+      'mvp agentur',
+      'mvp entwickeln lassen',
+      'mvp kosten',
+      'softwareentwicklung mvp',
+      'mvp softwareentwicklung',
+      'web app entwicklung',
+      'saas entwickeln lassen',
+      'next.js',
+      'supabase',
+      'vercel',
+      'stripe',
+      'rollen und rechte',
+      'rls',
+    ],
 
     home: 'Startseite',
     faq: 'FAQ',
@@ -273,19 +308,51 @@ export async function generateMetadata({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }): Promise<Metadata> {
   const sp = await searchParams
-  const lang = normalizeLang(sp?.lang) ?? 'de'
+  const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
   const t = getT(lang)
 
   return {
+    metadataBase: new URL(SITE_URL),
+
     title: t.metaTitle,
     description: t.metaDesc,
-    alternates: { canonical: '/faq' },
+
+    alternates: {
+      canonical: CANONICAL_PATH,
+      languages: {
+        'de-DE': `${CANONICAL_PATH}?lang=de`,
+        'en-US': `${CANONICAL_PATH}?lang=en`,
+      },
+    },
+
     openGraph: {
       title: t.metaTitle,
       description: t.ogDesc,
-      url: '/faq',
+      url: CANONICAL_PATH,
       type: 'website',
+      siteName: 'MVPWERK',
+      locale: lang === 'de' ? 'de_DE' : 'en_US',
     },
+
+    twitter: {
+      card: 'summary_large_image',
+      title: t.metaTitle,
+      description: t.ogDesc,
+    },
+
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+        'max-video-preview': -1,
+      },
+    },
+
+    keywords: [...t.keywords],
   }
 }
 

@@ -6,6 +6,9 @@ type Lang = 'de' | 'en'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://mvpwerk.de'
+const CANONICAL_PATH = '/foerderung-checker'
+
 function normalizeLang(v: unknown): Lang | null {
   if (!v) return null
   const s = Array.isArray(v) ? String(v[0] ?? '') : String(v)
@@ -34,13 +37,44 @@ function getMeta(lang: Lang) {
       title: 'Funding Checker – find matching programs | MVPWERK',
       description:
         'Quick overview of relevant funding programs for software, web apps and digitization — with filters by region and funding type.',
-    }
+      ogTitle: 'Funding Checker – find matching programs | MVPWERK',
+      ogDescription:
+        'Filter by region and funding type to discover relevant programs for software and digitization projects.',
+      keywords: [
+        'funding checker',
+        'funding programs germany',
+        'digitization funding',
+        'software funding',
+        'web app funding',
+        'grant',
+        'loan program',
+        'SME funding',
+      ],
+      locale: 'en_US',
+      inLanguage: 'en-US',
+    } as const
   }
+
   return {
     title: 'Förderung-Checker – passende Förderprogramme finden | MVPWERK',
     description:
       'Schneller Überblick über relevante Förderprogramme für Software, Web Apps und Digitalisierung – inkl. Filter nach Bundesland und Förderart.',
-  }
+    ogTitle: 'Förderung-Checker – passende Förderprogramme finden | MVPWERK',
+    ogDescription:
+      'Filtern Sie nach Region und Förderart und finden Sie passende Programme für Digitalisierungs- und Softwareprojekte.',
+    keywords: [
+      'förderung checker',
+      'förderprogramme digitalisierung',
+      'software förderung',
+      'web app förderung',
+      'zuschuss digitalisierung',
+      'darlehen digitalisierung',
+      'kfw digitalisierung',
+      'förderung kmu',
+    ],
+    locale: 'de_DE',
+    inLanguage: 'de-DE',
+  } as const
 }
 
 const PROGRAMME_DE: FoerderProgramm[] = [
@@ -339,18 +373,51 @@ export async function generateMetadata({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }): Promise<Metadata> {
   const sp = await searchParams
-  const lang = normalizeLang(sp?.lang) ?? 'de'
+  const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
   const meta = getMeta(lang)
+
   return {
+    metadataBase: new URL(SITE_URL),
+
     title: meta.title,
     description: meta.description,
-    alternates: { canonical: '/foerderung-checker' },
-    openGraph: {
-      title: meta.title,
-      description: meta.description,
-      url: '/foerderung-checker',
-      type: 'website',
+
+    alternates: {
+      canonical: CANONICAL_PATH,
+      languages: {
+        'de-DE': `${CANONICAL_PATH}?lang=de`,
+        'en-US': `${CANONICAL_PATH}?lang=en`,
+      },
     },
+
+    openGraph: {
+      title: meta.ogTitle,
+      description: meta.ogDescription,
+      url: CANONICAL_PATH,
+      type: 'website',
+      siteName: 'MVPWERK',
+      locale: meta.locale,
+    },
+
+    twitter: {
+      card: 'summary_large_image',
+      title: meta.ogTitle,
+      description: meta.ogDescription,
+    },
+
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+        'max-video-preview': -1,
+      },
+    },
+
+    keywords: [...meta.keywords],
   }
 }
 
@@ -360,8 +427,53 @@ export default async function Page({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const sp = await searchParams
-  const lang = normalizeLang(sp?.lang) ?? 'de'
+  const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
+  const meta = getMeta(lang)
+
   const PROGRAMME = lang === 'en' ? PROGRAMME_EN : PROGRAMME_DE
+  const pageUrl = `${SITE_URL}${CANONICAL_PATH}`
+
+  // JSON-LD: WebPage + WebApplication + Breadcrumbs
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: meta.title,
+      description: meta.description,
+      url: pageUrl,
+      inLanguage: meta.inLanguage,
+      isPartOf: { '@type': 'WebSite', name: 'MVPWERK', url: SITE_URL },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebApplication',
+      name: lang === 'de' ? 'Förderung-Checker' : 'Funding Checker',
+      applicationCategory: 'BusinessApplication',
+      operatingSystem: 'Web',
+      url: pageUrl,
+      inLanguage: meta.inLanguage,
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+      publisher: { '@type': 'Organization', name: 'MVPWERK', url: SITE_URL },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: lang === 'de' ? 'Startseite' : 'Home',
+          item: SITE_URL + '/',
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: lang === 'de' ? 'Förderung-Checker' : 'Funding Checker',
+          item: pageUrl,
+        },
+      ],
+    },
+  ]
 
   return (
     <main className="min-h-screen bg-white">
