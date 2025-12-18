@@ -67,7 +67,7 @@ export default function Header() {
   const [open, setOpen] = useState(false)
   const [langOpen, setLangOpen] = useState(false)
   const [solutionsOpen, setSolutionsOpen] = useState(false)
-  const [solutionsMobileOpen, setSolutionsMobileOpen] = useState(true)
+  const [solutionsMobileOpen, setSolutionsMobileOpen] = useState(false)
 
   // ✅ EINZIGE WAHRHEIT: URL
   const lang: Lang = useMemo(() => normalizeLang(searchParams?.get('lang')) ?? 'de', [searchParams])
