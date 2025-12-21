@@ -24,67 +24,67 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://mvpwerk.de'
 const CANONICAL_PATH = '/'
 
 function buildHomeMeta(lang: Lang) {
+  // ✅ SEO-Fokus: "Web App Agentur" (de) & "Web App Development Agency" (en)
   if (lang === 'en') {
     return {
-      title: 'MVP Development Agency – MVPWERK (Next.js, Supabase, Vercel)',
+      title: 'Web App Development Agency – MVPWERK (Next.js, Supabase, Vercel)',
       description:
-        'We build B2B MVPs and SaaS fast: product strategy, UX, full-stack development, APIs, auth, integrations and production launch — with a clean, scalable stack.',
-      ogTitle: 'MVP Development Agency – MVPWERK',
+        'We build cloud-based web apps and SaaS fast: product strategy, UX, full-stack development, APIs, auth, integrations and production launch — with a clean, scalable stack.',
+      ogTitle: 'Web App Development Agency – MVPWERK',
       ogDescription:
-        'From idea to production: MVPs, SaaS and web apps — full-stack, fast, reliable (Next.js, Supabase, Vercel).',
+        'From idea to production: cloud web apps and SaaS — full-stack, fast, reliable (Next.js, Supabase, Vercel).',
       locale: 'en_US',
       inLanguage: 'en-US',
       keywords: [
-        'mvp development agency',
-        'mvp developer',
-        'mvp development',
-        'build an mvp',
-        'saas development',
+        'web app agency',
+        'web app development agency',
         'web app development',
+        'build a web app',
+        'saas development agency',
+        'saas development',
+        'cloud software development',
+        'full stack development agency',
         'react development agency',
         'next js agency',
-        'full stack development agency',
         'api development',
+        'authentication',
         'supabase',
         'vercel',
         'stripe integration',
+        'b2b saas development',
       ],
     } as const
   }
 
   return {
-    title: 'MVP Agentur – MVPWERK (Next.js, Supabase, Vercel)',
+    title: 'Web App Agentur – MVPWERK (Next.js, Supabase, Vercel)',
     description:
-      'MVP Agentur für Startups & B2B: MVP entwickeln lassen, SaaS bauen, Full-Stack Entwicklung (Next.js, Supabase, Vercel) – schnell, skalierbar, produktionsreif.',
-    ogTitle: 'MVP Agentur – MVPWERK',
+      'Web App Agentur für SaaS & Unternehmen: Web Apps entwickeln lassen, Full-Stack Entwicklung (Next.js, Supabase, Vercel) – schnell, skalierbar, produktionsreif.',
+    ogTitle: 'Web App Agentur – MVPWERK',
     ogDescription:
-      'MVP entwickeln lassen: Strategie, UX & Full-Stack Umsetzung – schnell live mit Next.js, Supabase & Vercel.',
+      'Web App entwickeln lassen: Strategie, UX & Full-Stack Umsetzung – schnell live mit Next.js, Supabase & Vercel.',
     locale: 'de_DE',
     inLanguage: 'de-DE',
     keywords: [
-      'mvp agentur',
-      'softwareentwicklung mvp',
-      'mvp softwareentwicklung',
-      'mvp entwickeln lassen',
-      'mvp kosten',
-      'mvp budget',
-      'startup mvp',
-      'mvp software',
-      'mvp developer',
-      'mvp entwicklung agentur',
-      'mvp erstellen',
-      'mvp erstellen lassen',
+      'web app agentur',
+      'webapp agentur',
+      'web app entwickeln lassen',
+      'web app entwicklung',
+      'saas agentur',
       'saas entwickeln lassen',
-      'saas entwickler',
-      'react js agentur',
-      'vercel agentur',
-      'supabase agentur',
-      'next js agency',
-      'react development agency',
-      'full stack development agency',
-      'api development',
+      'software agentur',
+      'cloud software',
+      'cloudbasierte software',
       'individualsoftware entwickeln lassen',
-      'mvp firma',
+      'full stack entwicklung',
+      'next js agentur',
+      'react js agentur',
+      'supabase agentur',
+      'vercel agentur',
+      'api entwicklung',
+      'authentifizierung web app',
+      'stripe integration',
+      'b2b web app',
     ],
   } as const
 }
@@ -101,6 +101,7 @@ export async function generateMetadata({
   return {
     metadataBase: new URL(SITE_URL),
 
+    // ✅ Title/Description sind der wichtigste SEO-Hebel
     title: m.title,
     description: m.description,
 
@@ -139,6 +140,7 @@ export async function generateMetadata({
       },
     },
 
+    // ✅ Keywords: nicht mehr super-wichtig wie früher, aber schadet nicht
     keywords: [...m.keywords],
   }
 }
@@ -157,6 +159,7 @@ export default async function HomePage({
 
   const pageUrl = `${SITE_URL}/`
 
+  // ✅ JSON-LD für bessere Einordnung (Brand + Page + Service)
   const jsonLd = [
     {
       '@context': 'https://schema.org',
@@ -186,6 +189,20 @@ export default async function HomePage({
       url: pageUrl,
       inLanguage: m.inLanguage,
       isPartOf: { '@type': 'WebSite', name: 'MVPWERK', url: SITE_URL },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Service',
+      name:
+        lang === 'de'
+          ? 'Web App Agentur – Entwicklung von SaaS & cloudbasierter Software'
+          : 'Web App Development – SaaS & cloud software',
+      provider: { '@type': 'Organization', name: 'MVPWERK', url: SITE_URL },
+      areaServed: lang === 'de' ? 'DE' : 'Worldwide',
+      serviceType:
+        lang === 'de'
+          ? 'Web App Entwicklung, SaaS Entwicklung, Full-Stack Entwicklung'
+          : 'Web app development, SaaS development, full-stack development',
     },
   ]
 

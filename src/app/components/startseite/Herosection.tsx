@@ -26,26 +26,32 @@ export default function HeroSection({ lang }: { lang: Lang }) {
   const t = useMemo(() => {
     return {
       de: {
-        pill1: 'MVP Agentur',
-        pill2: 'Web App Agentur',
-        h1: 'MVP Agentur für SaaS und Web Apps',
-        p1a: 'MVPWERK baut ',
-        p1b: 'Cloudbasierte MVP Software, SaaS',
+        // ✅ 4 Toggles
+        pills: ['SaaS', 'Web App', 'Software', 'Cloudbasiert'],
+
+        // ✅ SEO/Intent: "Web App Agentur" direkt im H1 + im Copy
+        h1: 'Web App Agentur',
+
+        p1a: 'MVPWERK entwickelt ',
+        p1b: 'cloudbasierte Web Apps',
         p1c: ' und ',
-        p1d: 'Web Apps',
+        p1d: 'SaaS-Software',
         p1e:
-          ' für Startups, KMU und Teams — sauber, schnell, kampagnen-ready. Perfekt, wenn Sie ein ',
-        p1f: 'MVP entwickeln lassen',
-        p1g: ' möchten und sofort Resultate sehen wollen.',
+          ' für Startups, KMU und Teams — sauber, schnell, launch-ready. Ideal, wenn Sie eine ',
+        p1f: 'Web App entwickeln lassen',
+        p1g: ' möchten und zügig Resultate sehen wollen.',
+
         cta1: 'Projekt anfragen',
         cta2: 'Leistungen ansehen',
         note: 'Unverbindlich · Antwort meist am selben Tag',
+
         kpis: [
           { k: 'Performance', v: '90+ Lighthouse' },
           { k: 'Transparenz', v: '1×/Woche Demo' },
           { k: 'API-Entwicklung', v: '< 200ms Ø Response Time' },
           { k: 'Ownership', v: 'Code gehört Ihnen' },
         ],
+
         ratingTitle: '4,9/5 · Kundenbewertung',
         ratingSub: 'Basierend auf Projekten & Zusammenarbeit',
         trust1: '⚡ Antwort meist am selben Tag',
@@ -72,30 +78,34 @@ export default function HeroSection({ lang }: { lang: Lang }) {
         slide4Bot: 'DSGVO-freundlich · geringe Latenz',
 
         finalTitle: 'Nur noch wenige Klicks entfernt',
-        finalText: 'bis zu Ihrer eigenen Software – sauber gebaut, kampagnen-ready, skalierbar.',
+        finalText:
+          'bis zu Ihrer eigenen Web App – sauber gebaut, launch-ready, skalierbar.',
         finalCta: 'Projekt anfragen →',
       },
       en: {
-        pill1: 'MVP Agency',
-        pill2: 'Web App Agency',
-        h1: 'MVP Agency for SaaS and Web Apps',
+        pills: ['SaaS', 'Web App', 'Software', 'Cloud-based'],
+        h1: 'Web App Agency for SaaS & cloud software',
+
         p1a: 'MVPWERK builds ',
-        p1b: 'cloud-based MVP software, SaaS',
+        p1b: 'cloud-based web apps',
         p1c: ' and ',
-        p1d: 'web apps',
+        p1d: 'SaaS software',
         p1e:
-          ' for startups, SMEs, and teams — clean, fast, campaign-ready. Perfect if you want to ',
-        p1f: 'build an MVP',
+          ' for startups, SMEs, and teams — clean, fast, launch-ready. Perfect if you want to ',
+        p1f: 'build a web app',
         p1g: ' and see results quickly.',
+
         cta1: 'Request a project',
         cta2: 'View services',
         note: 'No obligation · Reply usually same day',
+
         kpis: [
           { k: 'Performance', v: '90+ Lighthouse' },
           { k: 'Transparency', v: 'Weekly demo' },
-          { k: 'Projects', v: '25+ delivered' },
+          { k: 'API Development', v: '< 200ms avg response' },
           { k: 'Ownership', v: 'You own the code' },
         ],
+
         ratingTitle: '4.9/5 · Client rating',
         ratingSub: 'Based on projects & collaboration',
         trust1: '⚡ Reply usually same day',
@@ -122,7 +132,7 @@ export default function HeroSection({ lang }: { lang: Lang }) {
         slide4Bot: 'GDPR-friendly · low latency',
 
         finalTitle: 'Just a few clicks away',
-        finalText: 'from your own software — clean build, campaign-ready, scalable.',
+        finalText: 'from your own web app — clean build, launch-ready, scalable.',
         finalCta: 'Request a project →',
       },
     }[lang]
@@ -190,13 +200,16 @@ export default function HeroSection({ lang }: { lang: Lang }) {
         <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-12">
           {/* LEFT */}
           <div className="lg:col-span-7">
+            {/* ✅ 4 Toggles */}
             <div className="flex flex-wrap gap-2">
-              <span className="inline-flex items-center rounded-full border border-slate-900/10 bg-white/70 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur">
-                {t.pill1}
-              </span>
-              <span className="inline-flex items-center rounded-full border border-slate-900/10 bg-white/70 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur">
-                {t.pill2}
-              </span>
+              {t.pills.map((pill) => (
+                <span
+                  key={pill}
+                  className="inline-flex items-center rounded-full border border-slate-900/10 bg-white/70 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur"
+                >
+                  {pill}
+                </span>
+              ))}
             </div>
 
             <h1 className="mt-5 text-[36px] font-semibold leading-[1.05] tracking-tight sm:text-[50px] md:text-[64px]">
