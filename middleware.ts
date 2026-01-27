@@ -1,4 +1,4 @@
-// middleware.ts
+// src/middleware.ts
 import { NextRequest, NextResponse } from 'next/server'
 
 const COOKIE = 'mvpwerk_lang'
@@ -7,7 +7,7 @@ type Lang = 'de' | 'en'
 
 function parseAcceptLanguage(header: string | null): Lang {
   const al = (header || '').trim()
-  if (!al) return 'en'
+  if (!al) return 'de'
 
   const prefs = al
     .split(',')
@@ -30,7 +30,7 @@ function parseAcceptLanguage(header: string | null): Lang {
   for (const p of prefs) {
     if (SUPPORTED.has(p.primary as Lang)) return p.primary as Lang
   }
-  return 'en'
+  return 'de'
 }
 
 export function middleware(req: NextRequest) {
@@ -52,7 +52,7 @@ export function middleware(req: NextRequest) {
   const paramLang = url.searchParams.get('lang')
   const cookieLang = req.cookies.get(COOKIE)?.value
 
-  // 1) URL override => Cookie setzen
+  // 1) URL override => Cookie setzen (ohne Redirect)
   if (paramLang && (paramLang === 'de' || paramLang === 'en')) {
     if (cookieLang !== paramLang) {
       const res = NextResponse.next()
@@ -66,23 +66,20 @@ export function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // 2) Cookie vorhanden => URL ergänzen
-  if (cookieLang && (cookieLang === 'de' || cookieLang === 'en')) {
-    url.searchParams.set('lang', cookieLang)
-    return NextResponse.redirect(url)
+  // 2) Kein lang-Param:
+  //    Optional: Cookie einmalig aus Accept-Language setzen – aber NICHT redirecten.
+  if (!cookieLang || (cookieLang !== 'de' && cookieLang !== 'en')) {
+    const detected = parseAcceptLanguage(req.headers.get('accept-language'))
+    const res = NextResponse.next()
+    res.cookies.set(COOKIE, detected, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: 'lax',
+    })
+    return res
   }
 
-  // 3) Sonst: Accept-Language auswerten => Cookie setzen + URL ergänzen
-  const detected = parseAcceptLanguage(req.headers.get('accept-language'))
-  url.searchParams.set('lang', detected)
-
-  const res = NextResponse.redirect(url)
-  res.cookies.set(COOKIE, detected, {
-    path: '/',
-    maxAge: 60 * 60 * 24 * 365,
-    sameSite: 'lax',
-  })
-  return res
+  return NextResponse.next()
 }
 
 export const config = {

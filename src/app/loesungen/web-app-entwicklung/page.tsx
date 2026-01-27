@@ -29,12 +29,14 @@ function normalizeLang(v: unknown): Lang | null {
   return null
 }
 
-async function getLangFromRequest(sp: Record<string, string | string[] | undefined>): Promise<Lang> {
+async function getLangFromRequest(
+  sp: Record<string, string | string[] | undefined>
+): Promise<Lang> {
   // 1) Query Param (?lang=en) hat Vorrang
   const q = normalizeLang(sp?.lang)
   if (q) return q
 
-  // 2) Cookie als Fallback (Next: cookies() ist async)
+  // 2) Cookie als Fallback
   const c = await cookies()
   const v = c.get(LANG_COOKIE)?.value
   return normalizeLang(v) ?? 'de'
@@ -68,6 +70,7 @@ function buildMeta(lang: Lang) {
       serviceName: 'Web App Development',
       serviceType: 'Web app development, SaaS, dashboards, workflows, APIs, integrations',
       locale: 'en_US',
+      inLanguage: 'en-US',
     } as const
   }
 
@@ -97,6 +100,7 @@ function buildMeta(lang: Lang) {
     serviceName: 'Web App Entwicklung',
     serviceType: 'Web App Entwicklung, SaaS, Dashboards, Workflows, APIs, Integrationen',
     locale: 'de_DE',
+    inLanguage: 'de-DE',
   } as const
 }
 
@@ -106,16 +110,25 @@ export async function generateMetadata({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }): Promise<Metadata> {
   const sp = await searchParams
+
+  // ✅ Sprache bleibt umschaltbar:
   const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
   const m = buildMeta(lang)
 
+  // ✅ Indexierung: canonical immer DE (nicht Query-less!)
+  const canonicalDe = `${CANONICAL_PATH}?lang=de`
+
   return {
     metadataBase: new URL(SITE_URL),
+
     title: m.title,
     description: m.description,
 
     alternates: {
-      canonical: CANONICAL_PATH,
+      // ✅ Canonical fest auf DE, damit Google DE als Default nimmt
+      canonical: canonicalDe,
+
+      // optional: hreflang darf bleiben (hilft Google, Varianten zu verstehen)
       languages: {
         'de-DE': `${CANONICAL_PATH}?lang=de`,
         'en-US': `${CANONICAL_PATH}?lang=en`,
@@ -125,7 +138,7 @@ export async function generateMetadata({
     openGraph: {
       title: m.ogTitle,
       description: m.ogDescription,
-      url: CANONICAL_PATH,
+      url: `${CANONICAL_PATH}?lang=${lang}`,
       type: 'website',
       siteName: 'MVPWERK',
       locale: m.locale,
@@ -137,17 +150,21 @@ export async function generateMetadata({
       description: m.ogDescription,
     },
 
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
-        'max-video-preview': -1,
-      },
-    },
+    // ✅ EN darf existieren (für Nutzer), aber nicht indexiert werden
+    robots:
+      lang === 'en'
+        ? { index: false, follow: true }
+        : {
+            index: true,
+            follow: true,
+            googleBot: {
+              index: true,
+              follow: true,
+              'max-image-preview': 'large',
+              'max-snippet': -1,
+              'max-video-preview': -1,
+            },
+          },
 
     keywords: [...m.keywords],
   }
@@ -165,7 +182,7 @@ export default async function Page({
   const lang = await getLangFromRequest(sp)
   const m = buildMeta(lang)
 
-  const pageUrl = `${SITE_URL}${CANONICAL_PATH}`
+  const pageUrl = `${SITE_URL}${CANONICAL_PATH}?lang=${lang}`
 
   return (
     <main className="min-h-screen bg-white text-slate-900">

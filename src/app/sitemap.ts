@@ -1,17 +1,16 @@
+// src/app/sitemap.ts
 import type { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mvpwerk.de'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mvpwerk.de'
   const now = new Date()
 
   const routes = [
     '/', // Startseite
-
     '/leistungen',
     '/kontakt',
     '/faq',
     '/foerderung-checker',
-
     '/impressum',
     '/datenschutz',
     '/agb',

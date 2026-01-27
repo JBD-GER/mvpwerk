@@ -7,7 +7,6 @@ type Lang = 'de' | 'en'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-
 function normalizeLang(v: unknown): Lang | null {
   if (!v) return null
   const s = Array.isArray(v) ? String(v[0] ?? '') : String(v)
@@ -144,7 +143,9 @@ function getT(lang: Lang) {
         vatBasisText: 'VAT ID pursuant to § 27a UStG (Germany).',
         representationText: 'Authorized to represent',
       },
-    }
+      locale: 'en_US',
+      inLanguage: 'en-US',
+    } as const
   }
 
   // DE
@@ -257,7 +258,9 @@ function getT(lang: Lang) {
       vatBasisText: 'USt-IdNr. gemäß § 27 a UStG',
       representationText: 'Vertretungsberechtigt',
     },
-  }
+    locale: 'de_DE',
+    inLanguage: 'de-DE',
+  } as const
 }
 
 export async function generateMetadata({
@@ -270,18 +273,51 @@ export async function generateMetadata({
   const t = getT(lang)
 
   return {
+    // ✅ Canonical immer DE
+    alternates: {
+      canonical: '/impressum',
+      languages: {
+        'de-DE': '/impressum?lang=de',
+        'en-US': '/impressum?lang=en',
+      },
+    },
+
     title: t.metaTitle,
     description: t.metaDescription,
-    alternates: { canonical: '/impressum' },
-    robots: { index: true, follow: true },
+
+    // ✅ EN: noindex, Umschalter bleibt aber funktionsfähig
+    robots:
+      lang === 'en'
+        ? {
+            index: false,
+            follow: true,
+            googleBot: { index: false, follow: true },
+          }
+        : {
+            index: true,
+            follow: true,
+            googleBot: { index: true, follow: true },
+          },
   }
 }
 
-function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+function Section({
+  id,
+  title,
+  children,
+}: {
+  id: string
+  title: string
+  children: React.ReactNode
+}) {
   return (
     <section id={id} className="scroll-mt-24">
-      <h2 className="text-[18px] font-semibold tracking-tight text-slate-900 sm:text-[20px]">{title}</h2>
-      <div className="mt-3 space-y-3 text-[13px] leading-relaxed text-slate-700 sm:text-[14px]">{children}</div>
+      <h2 className="text-[18px] font-semibold tracking-tight text-slate-900 sm:text-[20px]">
+        {title}
+      </h2>
+      <div className="mt-3 space-y-3 text-[13px] leading-relaxed text-slate-700 sm:text-[14px]">
+        {children}
+      </div>
     </section>
   )
 }
@@ -336,7 +372,9 @@ export default async function ImpressumPage({
           {t.h1}
         </h1>
 
-        <p className="mt-3 max-w-[980px] text-[14px] leading-relaxed text-slate-700 sm:text-[15px]">{t.intro}</p>
+        <p className="mt-3 max-w-[980px] text-[14px] leading-relaxed text-slate-700 sm:text-[15px]">
+          {t.intro}
+        </p>
       </header>
 
       <div className="relative mx-auto w-full max-w-[1200px] px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-10">
@@ -364,7 +402,10 @@ export default async function ImpressumPage({
                   <div className="mt-2 space-y-1.5">
                     <div>
                       {t.labels.email}:{' '}
-                      <a className="font-medium text-slate-900 underline underline-offset-2" href={`mailto:${COMPANY.email}`}>
+                      <a
+                        className="font-medium text-slate-900 underline underline-offset-2"
+                        href={`mailto:${COMPANY.email}`}
+                      >
                         {COMPANY.email}
                       </a>
                     </div>
@@ -378,7 +419,10 @@ export default async function ImpressumPage({
                       </a>
                     </div>
                     <div className="pt-1">
-                      <Link className="font-medium text-slate-900 underline underline-offset-2" href={hrefWithLang('/kontakt')}>
+                      <Link
+                        className="font-medium text-slate-900 underline underline-offset-2"
+                        href={hrefWithLang('/kontakt')}
+                      >
                         /kontakt
                       </Link>
                     </div>
@@ -387,7 +431,10 @@ export default async function ImpressumPage({
 
                 <div className="mt-4 text-[11px] text-slate-600">
                   {t.backHome}{' '}
-                  <Link href={hrefWithLang('/')} className="font-medium text-slate-900 underline underline-offset-2">
+                  <Link
+                    href={hrefWithLang('/')}
+                    className="font-medium text-slate-900 underline underline-offset-2"
+                  >
                     {lang === 'en' ? 'Home' : 'Startseite'}
                   </Link>
                 </div>
@@ -408,7 +455,9 @@ export default async function ImpressumPage({
                 <div className="relative space-y-10">
                   <Section id="headnote" title={t.s_headnote_title}>
                     <div className="rounded-2xl border border-slate-900/10 bg-white/70 p-4 text-[12px] leading-relaxed text-slate-700 shadow-sm">
-                      <div className="font-semibold text-slate-900">{lang === 'en' ? 'Short & clear' : 'Kurz & klar'}</div>
+                      <div className="font-semibold text-slate-900">
+                        {lang === 'en' ? 'Short & clear' : 'Kurz & klar'}
+                      </div>
                       <ul className="mt-2 space-y-1.5">
                         {t.s_headnote_list.map((x) => (
                           <li key={x.k}>
@@ -423,7 +472,14 @@ export default async function ImpressumPage({
                     <div className="grid gap-3 sm:grid-cols-2">
                       <InfoRow k={t.labels.provider} v={COMPANY.legal} />
                       <InfoRow k={t.labels.brand} v={COMPANY.brand} />
-                      <InfoRow k={t.labels.address} v={<span className="inline-block">{COMPANY.street}, {COMPANY.zipCity}</span>} />
+                      <InfoRow
+                        k={t.labels.address}
+                        v={
+                          <span className="inline-block">
+                            {COMPANY.street}, {COMPANY.zipCity}
+                          </span>
+                        }
+                      />
                       <InfoRow
                         k={t.labels.email}
                         v={
@@ -435,7 +491,10 @@ export default async function ImpressumPage({
                       <InfoRow
                         k={t.labels.phone}
                         v={
-                          <a className="underline underline-offset-2" href={`tel:${COMPANY.phone.replace(/\s/g, '')}`}>
+                          <a
+                            className="underline underline-offset-2"
+                            href={`tel:${COMPANY.phone.replace(/\s/g, '')}`}
+                          >
                             {COMPANY.phone}
                           </a>
                         }
@@ -453,7 +512,10 @@ export default async function ImpressumPage({
 
                   <Section id="vertretung" title={t.s_rep_title}>
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <InfoRow k={t.labels.managingDirector} v={<span className="font-semibold">{COMPANY.managingDirector}</span>} />
+                      <InfoRow
+                        k={t.labels.managingDirector}
+                        v={<span className="font-semibold">{COMPANY.managingDirector}</span>}
+                      />
                       <InfoRow k={t.labels.representation} v={<span>{t.misc.representationText}</span>} />
                     </div>
                   </Section>
@@ -493,7 +555,9 @@ export default async function ImpressumPage({
 
                   <Section id="marken" title={t.s_trademarks_title}>
                     <div className="rounded-2xl border border-slate-900/10 bg-white/70 p-4 text-[12px] leading-relaxed text-slate-700 shadow-sm">
-                      <div className="font-semibold text-slate-900">{lang === 'en' ? 'Trademarks / logos' : 'Marken / Logos'}</div>
+                      <div className="font-semibold text-slate-900">
+                        {lang === 'en' ? 'Trademarks / logos' : 'Marken / Logos'}
+                      </div>
                       <ul className="mt-2 space-y-1.5">
                         {t.s_trademarks_list.map((x) => (
                           <li key={x}>• {x}</li>
@@ -510,7 +574,9 @@ export default async function ImpressumPage({
                       {t.cta}
                     </Link>
 
-                    <div className="text-center text-[11px] text-slate-600 sm:text-right">{t.footerLine}</div>
+                    <div className="text-center text-[11px] text-slate-600 sm:text-right">
+                      {t.footerLine}
+                    </div>
                   </div>
                 </div>
 

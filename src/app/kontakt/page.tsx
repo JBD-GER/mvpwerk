@@ -25,7 +25,8 @@ function getT(lang: Lang) {
       metaTitle: 'Contact – MVPWERK',
       metaDescription:
         'Contact MVPWERK: request a project for MVP, SaaS or Web App. Required: first name, last name, email, phone. Reply usually the same day.',
-      ogDescription: 'Request your project: MVP, SaaS, Web App — fast, clean, handover-ready.',
+      ogDescription:
+        'Request your project: MVP, SaaS, Web App — fast, clean, handover-ready.',
       jsonLdName: 'Contact – MVPWERK',
 
       badge: 'Contact',
@@ -57,7 +58,9 @@ function getT(lang: Lang) {
 
       teamAlt: 'Team – MVPWERK',
       kontaktOgAlt: 'Contact – MVPWERK',
-    }
+      locale: 'en_US',
+      inLanguage: 'en-US',
+    } as const
   }
 
   return {
@@ -96,10 +99,13 @@ function getT(lang: Lang) {
 
     teamAlt: 'Team – MVPWERK',
     kontaktOgAlt: 'Kontakt – MVPWERK',
-  }
+    locale: 'de_DE',
+    inLanguage: 'de-DE',
+  } as const
 }
 
 // ✅ Next.js (Server Page): searchParams awaiten (wie bei dir im Projekt)
+// ✅ Ziel: Umschalter bleibt (DE/EN), aber EN soll NICHT indexiert werden
 export async function generateMetadata({
   searchParams,
 }: {
@@ -109,17 +115,31 @@ export async function generateMetadata({
   const lang = normalizeLang(sp?.lang) ?? 'de'
   const t = getT(lang)
 
+  // OG darf die echte URL mit Query haben (für Sharing ok)
   const ogUrl = `${SITE_URL}/kontakt${lang === 'en' ? '?lang=en' : ''}`
 
   return {
+    metadataBase: new URL(SITE_URL),
+
     title: t.metaTitle,
     description: t.metaDescription,
-    alternates: { canonical: '/kontakt' },
+
+    // ✅ Canonical immer DE (ohne Query) + hreflang weiterhin vorhanden
+    alternates: {
+      canonical: '/kontakt',
+      languages: {
+        'de-DE': '/kontakt?lang=de',
+        'en-US': '/kontakt?lang=en',
+      },
+    },
+
     openGraph: {
       type: 'website',
       url: ogUrl,
       title: t.metaTitle,
       description: t.ogDescription,
+      siteName: 'MVPWERK',
+      locale: t.locale,
       images: [
         {
           url: `${SITE_URL}/og/kontakt.png`,
@@ -129,17 +149,50 @@ export async function generateMetadata({
         },
       ],
     },
+
     twitter: {
       card: 'summary_large_image',
       title: t.metaTitle,
       description: t.ogDescription,
       images: [`${SITE_URL}/og/kontakt.png`],
     },
-    robots: { index: true, follow: true },
+
+    // ✅ Wichtig: EN = noindex, damit Google nicht Englisch indexiert,
+    // aber Umschalter bleibt trotzdem aktiv.
+    robots:
+      lang === 'en'
+        ? {
+            index: false,
+            follow: true,
+            googleBot: {
+              index: false,
+              follow: true,
+              'max-image-preview': 'large',
+              'max-snippet': -1,
+              'max-video-preview': -1,
+            },
+          }
+        : {
+            index: true,
+            follow: true,
+            googleBot: {
+              index: true,
+              follow: true,
+              'max-image-preview': 'large',
+              'max-snippet': -1,
+              'max-video-preview': -1,
+            },
+          },
   }
 }
 
-function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+function Card({
+  children,
+  className = '',
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
   return (
     <div
       className={[
@@ -235,6 +288,7 @@ export default async function KontaktPage({
     name: t.jsonLdName,
     url: `${SITE_URL}/kontakt${lang === 'en' ? '?lang=en' : ''}`,
     isPartOf: { '@type': 'WebSite', name: 'MVPWERK', url: SITE_URL },
+    inLanguage: t.inLanguage,
   }
 
   return (
@@ -263,7 +317,9 @@ export default async function KontaktPage({
           {t.h1}
         </h1>
 
-        <p className="mt-2 max-w-[820px] text-[13px] leading-relaxed text-slate-700 sm:text-[14px]">{t.lead}</p>
+        <p className="mt-2 max-w-[820px] text-[13px] leading-relaxed text-slate-700 sm:text-[14px]">
+          {t.lead}
+        </p>
 
         <div className="mt-4 flex flex-wrap gap-2">
           <span className="inline-flex items-center gap-2 rounded-full border border-slate-900/10 bg-white/70 px-3 py-1 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur">
@@ -291,7 +347,13 @@ export default async function KontaktPage({
             <Card className="h-full flex flex-col">
               <div className="relative flex-1 min-h-[320px] w-full">
                 <div className="relative h-full w-full overflow-hidden rounded-[1.5rem]">
-                  <Image src={TEAM_IMAGE} alt={t.teamAlt} fill className="object-cover object-top" priority />
+                  <Image
+                    src={TEAM_IMAGE}
+                    alt={t.teamAlt}
+                    fill
+                    className="object-cover object-top"
+                    priority
+                  />
                 </div>
 
                 {/* Floating seals box */}
@@ -367,6 +429,7 @@ export default async function KontaktPage({
           {/* Right */}
           <div className="lg:col-span-7">
             <div id="kontakt-form" className="h-full scroll-mt-24">
+              {/* ✅ Umschalter bleibt: KontaktClient kann weiter ?lang lesen/setzen */}
               <KontaktClient />
             </div>
           </div>

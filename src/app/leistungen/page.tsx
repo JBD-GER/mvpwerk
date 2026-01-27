@@ -18,6 +18,7 @@ function normalizeLang(v: unknown): Lang | null {
 }
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mvpwerk.de'
+const CANONICAL_PATH = '/leistungen'
 
 function getT(lang: Lang) {
   if (lang === 'en') {
@@ -94,8 +95,7 @@ function getT(lang: Lang) {
     cta: 'Projekt anfragen',
     ctaSub: 'Unverbindlich · Antwort meist am selben Tag',
     shortTitle: 'Kurz-Überblick',
-    shortSub:
-      'Weiter unten: Filter + Suche (z. B. KI, OAuth, GTM, GA4, API)',
+    shortSub: 'Weiter unten: Filter + Suche (z. B. KI, OAuth, GTM, GA4, API)',
     rightHint: 'Produktgefühl: clean, schnell, übergabefähig.',
     perfTitle: 'Performance, die man messen kann',
     perfSub: 'Core Web Vitals & Lighthouse – 10 Sekunden Vergleich.',
@@ -121,11 +121,11 @@ function getT(lang: Lang) {
       },
       {
         title: 'Qualitätssicherung & Testing',
-        desc: 'Flows, Rechte, Edge-Cases – stabil, nicht „crasht beim ersten Kunden“.'
+        desc: 'Flows, Rechte, Edge-Cases – stabil, nicht „crasht beim ersten Kunden“.',
       },
       {
         title: 'Launch, Betrieb & Weiterentwicklung',
-        desc: 'Go-live, Updates, Monitoring & Support – damit die Software nicht „stehen bleibt“.'
+        desc: 'Go-live, Updates, Monitoring & Support – damit die Software nicht „stehen bleibt“.',
       },
     ],
   }
@@ -137,16 +137,29 @@ export async function generateMetadata({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }): Promise<Metadata> {
   const sp = await searchParams
-  const lang = normalizeLang(sp?.lang) ?? 'de'
+  const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
   const t = getT(lang)
 
+  // ✅ Canonical immer DE, damit Google DE als Default indexiert
+  const canonicalDe = `${CANONICAL_PATH}?lang=de`
+
   return {
+    metadataBase: new URL(SITE_URL),
+
     title: t.metaTitle,
     description: t.metaDescription,
-    alternates: { canonical: '/leistungen' },
+
+    alternates: {
+      canonical: canonicalDe,
+      languages: {
+        'de-DE': `${CANONICAL_PATH}?lang=de`,
+        'en-US': `${CANONICAL_PATH}?lang=en`,
+      },
+    },
+
     openGraph: {
       type: 'website',
-      url: `${SITE_URL}/leistungen`,
+      url: `${CANONICAL_PATH}?lang=${lang}`,
       title: t.metaTitle,
       description: t.ogDescription,
       images: [
@@ -158,14 +171,18 @@ export async function generateMetadata({
           alt: t.metaTitle,
         },
       ],
+      locale: lang === 'de' ? 'de_DE' : 'en_US',
     },
+
     twitter: {
       card: 'summary_large_image',
       title: t.metaTitle,
       description: t.twitterDescription,
       images: [`${SITE_URL}/og/leistungen.png`],
     },
-    robots: { index: true, follow: true },
+
+    // ✅ EN bleibt nutzbar, aber wird nicht indexiert
+    robots: lang === 'en' ? { index: false, follow: true } : { index: true, follow: true },
   }
 }
 
@@ -189,7 +206,7 @@ export default async function LeistungenPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const sp = await searchParams
-  const lang = normalizeLang(sp?.lang) ?? 'de'
+  const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
   const t = getT(lang)
 
   const hrefWithLang = (href: string) => {
@@ -199,14 +216,17 @@ export default async function LeistungenPage({
     return qs ? `${href}?${qs}` : href
   }
 
+  // ✅ konsistent: URL enthält aktuelle Sprache
+  const pageUrl = `${SITE_URL}${CANONICAL_PATH}?lang=${lang}`
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
     name: t.jsonLdName,
-    url: `${SITE_URL}/leistungen`,
+    url: pageUrl,
     description: t.jsonLdDesc,
     isPartOf: { '@type': 'WebSite', name: 'MVPWERK', url: SITE_URL },
-    inLanguage: lang,
+    inLanguage: lang === 'de' ? 'de-DE' : 'en-US',
   }
 
   return (
@@ -243,7 +263,9 @@ export default async function LeistungenPage({
           {t.h1}
         </h1>
 
-        <p className="mt-3 max-w-[980px] text-[14px] leading-relaxed text-slate-700 sm:text-[15px]">{t.intro}</p>
+        <p className="mt-3 max-w-[980px] text-[14px] leading-relaxed text-slate-700 sm:text-[15px]">
+          {t.intro}
+        </p>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
           <Link
@@ -281,8 +303,13 @@ export default async function LeistungenPage({
                 >
                   <div className="flex items-start gap-3">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-900/10 bg-white/80 text-slate-900/70 shadow-sm">
-                      {/* Icon bleibt wie vorher, nur “neutral” */}
-                      <svg viewBox="0 0 24 24" className="h-[16px] w-[16px]" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-[16px] w-[16px]"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
                         <path d="M7 7h10M7 12h10M7 17h7" strokeLinecap="round" />
                         <path
                           d="M6 3h12a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"
@@ -303,7 +330,13 @@ export default async function LeistungenPage({
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex items-start gap-3">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-900/10 bg-white/80 text-slate-900/70 shadow-sm">
-                      <svg viewBox="0 0 24 24" className="h-[16px] w-[16px]" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-[16px] w-[16px]"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
                         <path d="M4 19V5" strokeLinecap="round" />
                         <path d="M4 19h16" strokeLinecap="round" />
                         <path d="M8 15v-5" strokeLinecap="round" />

@@ -25,10 +25,7 @@ function normalizeLang(v: unknown): Lang | null {
   return null
 }
 
-/** Passe das an deine echte Route an */
 const CANONICAL_PATH = '/loesungen/softwareentwicklung'
-
-/** Optional: falls du NEXT_PUBLIC_SITE_URL nutzt (z.B. https://mvpwerk.de) */
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://mvpwerk.de'
 
 function buildMeta(lang: Lang) {
@@ -52,6 +49,8 @@ function buildMeta(lang: Lang) {
         'vercel',
         'api development',
       ],
+      locale: 'en_US',
+      inLanguage: 'en-US',
     } as const
   }
 
@@ -75,76 +74,70 @@ function buildMeta(lang: Lang) {
       'api entwicklung',
       'individualsoftware',
     ],
+    locale: 'de_DE',
+    inLanguage: 'de-DE',
   } as const
 }
 
-/**
- * Multi-language SEO via ?lang=de|en:
- * - Default: de
- * - Canonical ohne Query
- * - Alternates für de/en als Query (einfach & stabil)
- */
-export function generateMetadata({
+export async function generateMetadata({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
-}): Promise<Metadata> | Metadata {
-  // NOTE: Next erlaubt async generateMetadata, wir machen es einfach async:
-  return (async () => {
-    const sp = await searchParams
-    const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
-    const m = buildMeta(lang)
+}): Promise<Metadata> {
+  const sp = await searchParams
+  const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
+  const m = buildMeta(lang)
 
-    const canonical = `${SITE_URL}${CANONICAL_PATH}`
+  // ✅ Canonical immer DE, damit Google DE als Default nimmt
+  const canonicalDe = `${CANONICAL_PATH}?lang=de`
 
-    return {
-      title: m.title,
-      description: m.description,
+  return {
+    metadataBase: new URL(SITE_URL),
 
-      alternates: {
-        canonical: CANONICAL_PATH,
-        languages: {
-          'de-DE': `${CANONICAL_PATH}?lang=de`,
-          'en-US': `${CANONICAL_PATH}?lang=en`,
-        },
+    title: m.title,
+    description: m.description,
+
+    alternates: {
+      canonical: canonicalDe,
+      languages: {
+        'de-DE': `${CANONICAL_PATH}?lang=de`,
+        'en-US': `${CANONICAL_PATH}?lang=en`,
       },
+    },
 
-      openGraph: {
-        title: m.ogTitle,
-        description: m.ogDescription,
-        url: CANONICAL_PATH,
-        type: 'website',
-        siteName: 'MVPWERK',
-        locale: lang === 'de' ? 'de_DE' : 'en_US',
-      },
+    openGraph: {
+      title: m.ogTitle,
+      description: m.ogDescription,
+      url: `${CANONICAL_PATH}?lang=${lang}`,
+      type: 'website',
+      siteName: 'MVPWERK',
+      locale: m.locale,
+    },
 
-      twitter: {
-        card: 'summary_large_image',
-        title: m.ogTitle,
-        description: m.ogDescription,
-      },
+    twitter: {
+      card: 'summary_large_image',
+      title: m.ogTitle,
+      description: m.ogDescription,
+    },
 
-      robots: {
-        index: true,
-        follow: true,
-        googleBot: {
-          index: true,
-          follow: true,
-          'max-image-preview': 'large',
-          'max-snippet': -1,
-          'max-video-preview': -1,
-        },
-      },
+    // ✅ EN existiert für Nutzer, aber wird nicht indexiert
+    robots:
+      lang === 'en'
+        ? { index: false, follow: true }
+        : {
+            index: true,
+            follow: true,
+            googleBot: {
+              index: true,
+              follow: true,
+              'max-image-preview': 'large',
+              'max-snippet': -1,
+              'max-video-preview': -1,
+            },
+          },
 
-      keywords: [...m.keywords],
-
-      // optional – wenn du das in deinem Setup nutzt:
-      metadataBase: new URL(SITE_URL),
-
-      // optional – falls du Icons/Favicons zentral hast, sonst weglassen:
-      // icons: { icon: '/favicon.ico' },
-    }
-  })()
+    keywords: [...m.keywords],
+  }
 }
 
 export const dynamic = 'force-dynamic'
@@ -159,17 +152,16 @@ export default async function SoftwareEntwicklungPage({
   const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
   const m = buildMeta(lang)
 
+  const pageUrl = `${SITE_URL}${CANONICAL_PATH}?lang=${lang}`
+
   return (
     <main className="min-h-screen bg-white text-slate-900">
-      {/* Hero / Navigation ohne CTA */}
       <SoftwareHeroSection lang={lang} />
 
-      {/* Inhalt */}
       <SoftwareIntroSection lang={lang} />
       <SoftwareUseCasesSection lang={lang} />
       <SoftwareLeistungenSection lang={lang} />
 
-      {/* TeamSection: gewünscht „in der Mitte“ */}
       <TeamSection lang={lang} />
 
       <SoftwareStackSection lang={lang} />
@@ -189,21 +181,14 @@ export default async function SoftwareEntwicklungPage({
             '@context': 'https://schema.org',
             '@type': 'Service',
             name: m.serviceName,
-            provider: {
-              '@type': 'Organization',
-              name: 'MVPWERK',
-              url: SITE_URL,
-            },
+            provider: { '@type': 'Organization', name: 'MVPWERK', url: SITE_URL },
             serviceType:
               lang === 'de'
                 ? 'Softwareentwicklung, Web-App Entwicklung, SaaS Entwicklung'
                 : 'Software development, web app development, SaaS development',
             areaServed: 'DE',
-            url: `${SITE_URL}${CANONICAL_PATH}`,
-            offers: {
-              '@type': 'Offer',
-              availability: 'https://schema.org/InStock',
-            },
+            url: pageUrl,
+            offers: { '@type': 'Offer', availability: 'https://schema.org/InStock' },
           }),
         }}
       />

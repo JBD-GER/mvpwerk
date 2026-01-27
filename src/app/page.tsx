@@ -98,6 +98,9 @@ export async function generateMetadata({
   const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
   const m = buildHomeMeta(lang)
 
+  // ✅ Canonical immer DE, damit Google DE als Default indexiert
+  const canonicalDe = `/?lang=de`
+
   return {
     metadataBase: new URL(SITE_URL),
 
@@ -106,7 +109,7 @@ export async function generateMetadata({
     description: m.description,
 
     alternates: {
-      canonical: CANONICAL_PATH,
+      canonical: canonicalDe,
       languages: {
         'de-DE': `/?lang=de`,
         'en-US': `/?lang=en`,
@@ -116,7 +119,7 @@ export async function generateMetadata({
     openGraph: {
       title: m.ogTitle,
       description: m.ogDescription,
-      url: CANONICAL_PATH,
+      url: `/?lang=${lang}`,
       type: 'website',
       siteName: 'MVPWERK',
       locale: m.locale,
@@ -128,17 +131,21 @@ export async function generateMetadata({
       description: m.ogDescription,
     },
 
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
-        'max-video-preview': -1,
-      },
-    },
+    // ✅ EN bleibt nutzbar, aber wird nicht indexiert
+    robots:
+      lang === 'en'
+        ? { index: false, follow: true }
+        : {
+            index: true,
+            follow: true,
+            googleBot: {
+              index: true,
+              follow: true,
+              'max-image-preview': 'large',
+              'max-snippet': -1,
+              'max-video-preview': -1,
+            },
+          },
 
     // ✅ Keywords: nicht mehr super-wichtig wie früher, aber schadet nicht
     keywords: [...m.keywords],
@@ -157,7 +164,8 @@ export default async function HomePage({
   const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
   const m = buildHomeMeta(lang)
 
-  const pageUrl = `${SITE_URL}/`
+  // ✅ konsistent: URL enthält aktuelle Sprache
+  const pageUrl = `${SITE_URL}/?lang=${lang}`
 
   // ✅ JSON-LD für bessere Einordnung (Brand + Page + Service)
   const jsonLd = [

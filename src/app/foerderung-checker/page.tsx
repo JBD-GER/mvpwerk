@@ -83,7 +83,8 @@ const PROGRAMME_DE: FoerderProgramm[] = [
     title: 'GUM – Gründungs- & Mittelstandsförderung (Hessen)',
     region: 'Hessen',
     type: 'Darlehen',
-    short: 'Finanzierung/Unterstützung für Gründung, Wachstum oder Investitionen – je nach Vorhaben (z. B. Digitalisierung).',
+    short:
+      'Finanzierung/Unterstützung für Gründung, Wachstum oder Investitionen – je nach Vorhaben (z. B. Digitalisierung).',
     goodFor: ['Gründung', 'Wachstum', 'Digitalisierungsvorhaben'],
     url: 'https://www.foerderdatenbank.de/FDB/Content/DE/Foerderprogramm/Land/Hessen/gum-gruendungs-und-mittelstandsfoerderung.html',
     tags: ['KMU', 'Finanzierung'],
@@ -103,7 +104,8 @@ const PROGRAMME_DE: FoerderProgramm[] = [
     title: 'EFRE 2021–2027 (Hessen)',
     region: 'Hessen',
     type: 'Zuschuss',
-    short: 'EU-Mittel (EFRE) – Programme/Schwerpunkte je nach Aufruf & Zielsetzung (u. a. Innovation/Digitalisierung).',
+    short:
+      'EU-Mittel (EFRE) – Programme/Schwerpunkte je nach Aufruf & Zielsetzung (u. a. Innovation/Digitalisierung).',
     goodFor: ['Innovation', 'Digitalisierung', 'Wachstumsvorhaben'],
     url: 'https://www.foerderdatenbank.de/FDB/Content/DE/Foerderprogramm/Land/Hessen/efre-2021-2027.html',
     tags: ['EU', 'EFRE'],
@@ -113,7 +115,8 @@ const PROGRAMME_DE: FoerderProgramm[] = [
     title: 'Innovationskredit Hessen',
     region: 'Hessen',
     type: 'Darlehen',
-    short: 'Kreditlösung für innovative Vorhaben/Investitionen – interessant, wenn Software/Digitalisierung Teil des Projekts ist.',
+    short:
+      'Kreditlösung für innovative Vorhaben/Investitionen – interessant, wenn Software/Digitalisierung Teil des Projekts ist.',
     goodFor: ['Investitionen', 'Innovationsvorhaben', 'Skalierung'],
     url: 'https://www.foerderdatenbank.de/FDB/Content/DE/Foerderprogramm/Land/Hessen/innovationskredit-hessen.html',
     tags: ['Kredit', 'Innovation'],
@@ -133,7 +136,8 @@ const PROGRAMME_DE: FoerderProgramm[] = [
     title: 'Förderung Mittelstand – Darlehen (Sachsen)',
     region: 'Sachsen',
     type: 'Darlehen',
-    short: 'Finanzierung für mittelständische Vorhaben – relevant, wenn Software/Digitalisierung Bestandteil der Investition ist.',
+    short:
+      'Finanzierung für mittelständische Vorhaben – relevant, wenn Software/Digitalisierung Bestandteil der Investition ist.',
     goodFor: ['KMU', 'Investitionen', 'Wachstum'],
     url: 'https://www.foerderdatenbank.de/FDB/Content/DE/Foerderprogramm/Land/Sachsen/foerderung-mittelstand-darlehen.html',
     tags: ['KMU', 'Finanzierung'],
@@ -143,7 +147,8 @@ const PROGRAMME_DE: FoerderProgramm[] = [
     title: 'Go-to-Market Gutschein (NRW)',
     region: 'NRW',
     type: 'Gutschein',
-    short: 'Unterstützung für Markteintritt/Go-to-Market – spannend, wenn Sie eine neue Software/Web-App launchen wollen.',
+    short:
+      'Unterstützung für Markteintritt/Go-to-Market – spannend, wenn Sie eine neue Software/Web-App launchen wollen.',
     goodFor: ['Markteintritt', 'Go-to-Market', 'Launch/Vertrieb'],
     url: 'https://www.foerderdatenbank.de/FDB/Content/DE/Foerderprogramm/Land/NRW/go-to-market-gutschein.html',
     tags: ['Launch', 'Marketing'],
@@ -173,7 +178,8 @@ const PROGRAMME_DE: FoerderProgramm[] = [
     title: 'Hamburg Digital Check',
     region: 'Hamburg',
     type: 'Zuschuss',
-    short: 'Zuschuss für Digitalisierungsmaßnahmen – gut, wenn Sie schnell starten und einen Teil der Kosten abfedern wollen.',
+    short:
+      'Zuschuss für Digitalisierungsmaßnahmen – gut, wenn Sie schnell starten und einen Teil der Kosten abfedern wollen.',
     goodFor: ['Digitalisierung', 'Schnellstart', 'Einführung/Umsetzung'],
     url: 'https://www.foerderdatenbank.de/FDB/Content/DE/Foerderprogramm/Land/Hamburg/hamburg-digital-check.html',
     tags: ['Hamburg', 'Zuschuss'],
@@ -183,7 +189,8 @@ const PROGRAMME_DE: FoerderProgramm[] = [
     title: 'ERP-Förderkredit Digitalisierung (Bund)',
     region: 'Bund',
     type: 'Darlehen',
-    short: 'Bundesweiter Förderkredit – relevant bei Investitionen in Digitalisierung/Software (Details je nach Konditionen).',
+    short:
+      'Bundesweiter Förderkredit – relevant bei Investitionen in Digitalisierung/Software (Details je nach Konditionen).',
     goodFor: ['Digitalisierung', 'Softwareinvestition', 'Wachstum'],
     url: 'https://www.foerderdatenbank.de/FDB/Content/DE/Foerderprogramm/Bund/BMWi/erp-foerderkredit-digitalisierung-865244.html',
     tags: ['Bund', 'KfW', 'hot'],
@@ -375,6 +382,26 @@ export async function generateMetadata({
   const sp = await searchParams
   const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
   const meta = getMeta(lang)
+  const isEn = lang === 'en'
+
+  // ✅ EN: noindex (keine englische Indexierung), DE: index
+  const robots: Metadata['robots'] = isEn
+    ? {
+        index: false,
+        follow: true,
+        googleBot: { index: false, follow: true },
+      }
+    : {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: true,
+          follow: true,
+          'max-image-preview': 'large',
+          'max-snippet': -1,
+          'max-video-preview': -1,
+        },
+      }
 
   return {
     metadataBase: new URL(SITE_URL),
@@ -382,6 +409,7 @@ export async function generateMetadata({
     title: meta.title,
     description: meta.description,
 
+    // ✅ Umschalter bleibt (hreflang), Canonical bleibt auf dem DE-Pfad
     alternates: {
       canonical: CANONICAL_PATH,
       languages: {
@@ -405,17 +433,7 @@ export async function generateMetadata({
       description: meta.ogDescription,
     },
 
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
-        'max-video-preview': -1,
-      },
-    },
+    robots,
 
     keywords: [...meta.keywords],
   }
@@ -430,7 +448,9 @@ export default async function Page({
   const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
   const meta = getMeta(lang)
 
-  const PROGRAMME = lang === 'en' ? PROGRAMME_EN : PROGRAMME_DE
+  const isEn = lang === 'en'
+  const PROGRAMME = isEn ? PROGRAMME_EN : PROGRAMME_DE
+
   const pageUrl = `${SITE_URL}${CANONICAL_PATH}`
 
   // JSON-LD: WebPage + WebApplication + Breadcrumbs
@@ -447,7 +467,7 @@ export default async function Page({
     {
       '@context': 'https://schema.org',
       '@type': 'WebApplication',
-      name: lang === 'de' ? 'Förderung-Checker' : 'Funding Checker',
+      name: isEn ? 'Funding Checker' : 'Förderung-Checker',
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Web',
       url: pageUrl,
@@ -462,13 +482,13 @@ export default async function Page({
         {
           '@type': 'ListItem',
           position: 1,
-          name: lang === 'de' ? 'Startseite' : 'Home',
+          name: isEn ? 'Home' : 'Startseite',
           item: SITE_URL + '/',
         },
         {
           '@type': 'ListItem',
           position: 2,
-          name: lang === 'de' ? 'Förderung-Checker' : 'Funding Checker',
+          name: isEn ? 'Funding Checker' : 'Förderung-Checker',
           item: pageUrl,
         },
       ],
@@ -480,7 +500,14 @@ export default async function Page({
       {/* White background – keine harten Cuts */}
       <div className="pointer-events-none fixed inset-0 -z-10 bg-white" />
 
-<FoerderungCheckerClient programmes={PROGRAMME} />
+      {/* ✅ JSON-LD ausgeben (sonst "unused jsonLd") */}
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
+      <FoerderungCheckerClient programmes={PROGRAMME} />
     </main>
   )
 }

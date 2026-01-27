@@ -30,7 +30,9 @@ function normalizeLang(v: unknown): Lang | null {
   return null
 }
 
-async function getLangFromRequest(sp: Record<string, string | string[] | undefined>): Promise<Lang> {
+async function getLangFromRequest(
+  sp: Record<string, string | string[] | undefined>
+): Promise<Lang> {
   // 1) Query Param (?lang=en) hat Vorrang
   const q = normalizeLang(sp?.lang)
   if (q) return q
@@ -68,6 +70,7 @@ function buildMeta(lang: Lang) {
       serviceName: 'AI Development',
       serviceType: 'AI development, LLM integration, RAG, agents, automation',
       locale: 'en_US',
+      inLanguage: 'en-US',
     } as const
   }
 
@@ -98,14 +101,15 @@ function buildMeta(lang: Lang) {
     serviceName: 'KI Entwicklung',
     serviceType: 'KI Entwicklung, LLM Integration, RAG, Agenten, Automationen',
     locale: 'de_DE',
+    inLanguage: 'de-DE',
   } as const
 }
 
 /**
  * SEO / Metadata:
- * - canonical ohne Query
+ * - canonical IMMER auf DE (damit Google DE als Default indexiert)
  * - alternates für de/en via ?lang=
- * - OG/Twitter/Robots/Keywords
+ * - EN: noindex (Switch bleibt aber nutzbar)
  */
 export async function generateMetadata({
   searchParams,
@@ -116,6 +120,9 @@ export async function generateMetadata({
   const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
   const m = buildMeta(lang)
 
+  // ✅ Canonical immer DE
+  const canonicalDe = `${CANONICAL_PATH}?lang=de`
+
   return {
     metadataBase: new URL(SITE_URL),
 
@@ -123,7 +130,7 @@ export async function generateMetadata({
     description: m.description,
 
     alternates: {
-      canonical: CANONICAL_PATH,
+      canonical: canonicalDe,
       languages: {
         'de-DE': `${CANONICAL_PATH}?lang=de`,
         'en-US': `${CANONICAL_PATH}?lang=en`,
@@ -133,7 +140,7 @@ export async function generateMetadata({
     openGraph: {
       title: m.ogTitle,
       description: m.ogDescription,
-      url: CANONICAL_PATH,
+      url: `${CANONICAL_PATH}?lang=${lang}`,
       type: 'website',
       siteName: 'MVPWERK',
       locale: m.locale,
@@ -145,17 +152,21 @@ export async function generateMetadata({
       description: m.ogDescription,
     },
 
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
-        'max-video-preview': -1,
-      },
-    },
+    // ✅ EN nicht indexieren, DE indexieren
+    robots:
+      lang === 'en'
+        ? { index: false, follow: true }
+        : {
+            index: true,
+            follow: true,
+            googleBot: {
+              index: true,
+              follow: true,
+              'max-image-preview': 'large',
+              'max-snippet': -1,
+              'max-video-preview': -1,
+            },
+          },
 
     keywords: [...m.keywords],
   }
@@ -173,8 +184,8 @@ export default async function Page({
   const lang = await getLangFromRequest(sp)
   const m = buildMeta(lang)
 
-  // Optional (für JSON-LD): “absolute” URL
-  const pageUrl = `${SITE_URL}${CANONICAL_PATH}`
+  // ✅ Absolute URL inkl. aktueller Sprache (konsistent zu OG)
+  const pageUrl = `${SITE_URL}${CANONICAL_PATH}?lang=${lang}`
 
   return (
     <main className="min-h-screen bg-white text-slate-900">

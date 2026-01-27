@@ -69,6 +69,7 @@ function buildMeta(lang: Lang) {
       serviceType:
         'Cloud architecture, deployments, infrastructure as code, observability, security, scalability',
       locale: 'en_US',
+      inLanguage: 'en-US',
     } as const
   }
 
@@ -97,6 +98,7 @@ function buildMeta(lang: Lang) {
     serviceType:
       'Cloud Architektur, Deployments, Infrastructure as Code, Observability, Security, Skalierung',
     locale: 'de_DE',
+    inLanguage: 'de-DE',
   } as const
 }
 
@@ -109,13 +111,16 @@ export async function generateMetadata({
   const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
   const m = buildMeta(lang)
 
+  // ✅ Canonical immer DE, damit Google DE als Default indexiert
+  const canonicalDe = `${CANONICAL_PATH}?lang=de`
+
   return {
     metadataBase: new URL(SITE_URL),
     title: m.title,
     description: m.description,
 
     alternates: {
-      canonical: CANONICAL_PATH,
+      canonical: canonicalDe,
       languages: {
         'de-DE': `${CANONICAL_PATH}?lang=de`,
         'en-US': `${CANONICAL_PATH}?lang=en`,
@@ -125,7 +130,7 @@ export async function generateMetadata({
     openGraph: {
       title: m.ogTitle,
       description: m.ogDescription,
-      url: CANONICAL_PATH,
+      url: `${CANONICAL_PATH}?lang=${lang}`,
       type: 'website',
       siteName: 'MVPWERK',
       locale: m.locale,
@@ -137,17 +142,21 @@ export async function generateMetadata({
       description: m.ogDescription,
     },
 
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
-        'max-video-preview': -1,
-      },
-    },
+    // ✅ EN bleibt nutzbar, aber wird nicht indexiert
+    robots:
+      lang === 'en'
+        ? { index: false, follow: true }
+        : {
+            index: true,
+            follow: true,
+            googleBot: {
+              index: true,
+              follow: true,
+              'max-image-preview': 'large',
+              'max-snippet': -1,
+              'max-video-preview': -1,
+            },
+          },
 
     keywords: [...m.keywords],
   }
@@ -164,7 +173,22 @@ export default async function Page({
   const sp = await searchParams
   const lang = await getLangFromRequest(sp)
   const m = buildMeta(lang)
-  const pageUrl = `${SITE_URL}${CANONICAL_PATH}`
+
+  // ✅ konsistent: URL enthält aktuelle Sprache
+  const pageUrl = `${SITE_URL}${CANONICAL_PATH}?lang=${lang}`
+
+  // ✅ JSON-LD für bessere Einordnung (Service)
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: m.serviceName,
+    provider: { '@type': 'Organization', name: 'MVPWERK', url: SITE_URL },
+    serviceType: m.serviceType,
+    areaServed: 'DE',
+    url: pageUrl,
+    inLanguage: m.inLanguage,
+    offers: { '@type': 'Offer', availability: 'https://schema.org/InStock' },
+  }
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
@@ -184,18 +208,7 @@ export default async function Page({
       <script
         type="application/ld+json"
         suppressHydrationWarning
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'Service',
-            name: m.serviceName,
-            provider: { '@type': 'Organization', name: 'MVPWERK', url: SITE_URL },
-            serviceType: m.serviceType,
-            areaServed: 'DE',
-            url: pageUrl,
-            offers: { '@type': 'Offer', availability: 'https://schema.org/InStock' },
-          }),
-        }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
     </main>
   )

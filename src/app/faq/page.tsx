@@ -310,6 +310,26 @@ export async function generateMetadata({
   const sp = await searchParams
   const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
   const t = getT(lang)
+  const isEn = lang === 'en'
+
+  // ✅ EN: noindex, DE: index (damit keine englische Indexierung passiert)
+  const robots: Metadata['robots'] = isEn
+    ? {
+        index: false,
+        follow: true,
+        googleBot: { index: false, follow: true },
+      }
+    : {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: true,
+          follow: true,
+          'max-image-preview': 'large',
+          'max-snippet': -1,
+          'max-video-preview': -1,
+        },
+      }
 
   return {
     metadataBase: new URL(SITE_URL),
@@ -331,7 +351,7 @@ export async function generateMetadata({
       url: CANONICAL_PATH,
       type: 'website',
       siteName: 'MVPWERK',
-      locale: lang === 'de' ? 'de_DE' : 'en_US',
+      locale: isEn ? 'en_US' : 'de_DE',
     },
 
     twitter: {
@@ -340,17 +360,7 @@ export async function generateMetadata({
       description: t.ogDesc,
     },
 
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
-        'max-video-preview': -1,
-      },
-    },
+    robots,
 
     keywords: [...t.keywords],
   }
@@ -362,10 +372,11 @@ export default async function FAQPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const sp = await searchParams
-  const lang = normalizeLang(sp?.lang) ?? 'de'
+  const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
   const t = getT(lang)
+  const isEn = lang === 'en'
 
-  const FAQS = lang === 'en' ? [...FAQS_EN] : [...FAQS_DE]
+  const FAQS = isEn ? [...FAQS_EN] : [...FAQS_DE]
   const faqJsonLd = toFaqJsonLd(FAQS)
 
   const hrefWithLang = (href: string) => {
@@ -390,8 +401,12 @@ export default async function FAQPage({
         <div className="absolute bottom-[-240px] left-[-140px] h-[520px] w-[520px] rounded-full bg-slate-900/8 blur-3xl md:h-[720px] md:w-[720px]" />
       </div>
 
-      {/* JSON-LD */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      {/* ✅ JSON-LD (suppressHydrationWarning für Ruhe im Dev) */}
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
 
       {/* HERO */}
       <section className="mx-auto w-full max-w-[1400px] px-4 pt-14 sm:px-6 sm:pt-20">

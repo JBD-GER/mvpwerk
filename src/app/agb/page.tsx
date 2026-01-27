@@ -1,6 +1,7 @@
 // src/app/agb/page.tsx
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import React from 'react'
 
 type Lang = 'de' | 'en'
 
@@ -508,15 +509,58 @@ export async function generateMetadata({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }): Promise<Metadata> {
   const sp = await searchParams
-  const lang = normalizeLang(sp?.lang) ?? 'de'
+  const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
   const t = getT(lang)
+  const isEn = lang === 'en'
+
+  // ✅ EN: noindex, DE: index
+  const robots: Metadata['robots'] = isEn
+    ? {
+        index: false,
+        follow: true,
+        googleBot: { index: false, follow: true },
+      }
+    : {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: true,
+          follow: true,
+          'max-image-preview': 'large',
+          'max-snippet': -1,
+          'max-video-preview': -1,
+        },
+      }
 
   return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mvpwerk.de'),
     title: t.metaTitle,
     description: t.metaDescription,
-    alternates: { canonical: '/agb' },
+    alternates: {
+      canonical: CANONICAL_PATH,
+      languages: {
+        'de-DE': `${CANONICAL_PATH}?lang=de`,
+        'en-US': `${CANONICAL_PATH}?lang=en`,
+      },
+    },
+    openGraph: {
+      title: t.metaTitle,
+      description: t.metaDescription,
+      url: CANONICAL_PATH,
+      type: 'website',
+      siteName: COMPANY.brand,
+      locale: isEn ? 'en_US' : 'de_DE',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t.metaTitle,
+      description: t.metaDescription,
+    },
+    robots,
   }
 }
+
+const CANONICAL_PATH = '/agb'
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
@@ -533,15 +577,18 @@ export default async function AGBPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const sp = await searchParams
-  const lang = normalizeLang(sp?.lang) ?? 'de'
+  const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
   const t = getT(lang)
 
   const hrefWithLang = (href: string) => {
     const params = new URLSearchParams()
-    if (lang) params.set('lang', lang)
+    params.set('lang', lang)
     const qs = params.toString()
     return qs ? `${href}?${qs}` : href
   }
+
+  const telHref = `tel:${COMPANY.phone.replace(/\s/g, '')}`
+  const mailHref = `mailto:${COMPANY.email}`
 
   return (
     <main className="relative overflow-hidden bg-white">
@@ -578,6 +625,7 @@ export default async function AGBPage({
             <div className="sticky top-6">
               <div className="relative overflow-hidden rounded-[1.6rem] border border-slate-900/10 bg-white/70 p-5 shadow-sm backdrop-blur-xl">
                 <div className="text-[12px] font-semibold text-slate-900">{t.tocTitle}</div>
+
                 <nav className="mt-3 space-y-1.5">
                   {t.toc.map((x) => (
                     <a
@@ -599,10 +647,31 @@ export default async function AGBPage({
                   </ul>
                 </div>
 
+                <div className="mt-4 rounded-2xl border border-slate-900/10 bg-white/70 p-4 text-[11px] leading-relaxed text-slate-700 shadow-sm">
+                  <div className="font-semibold text-slate-900">{lang === 'en' ? 'Contact' : 'Kontakt'}</div>
+                  <div className="mt-2 space-y-1.5">
+                    <div>
+                      E-Mail:{' '}
+                      <a className="font-medium text-slate-900 underline underline-offset-2" href={mailHref}>
+                        {COMPANY.email}
+                      </a>
+                    </div>
+                    <div>
+                      {lang === 'en' ? 'Phone:' : 'Telefon:'}{' '}
+                      <a className="font-medium text-slate-900 underline underline-offset-2" href={telHref}>
+                        {COMPANY.phone}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="mt-4 text-[11px] text-slate-600">
-                  {t.questions}{' '}
-                  <Link href={hrefWithLang('/kontakt')} className="font-medium text-slate-900 underline underline-offset-2">
-                    {t.contact}
+                  {lang === 'en' ? 'Legal:' : 'Rechtliches:'}{' '}
+                  <Link
+                    className="font-medium text-slate-900 underline underline-offset-2"
+                    href={hrefWithLang('/impressum')}
+                  >
+                    {lang === 'en' ? 'Imprint' : 'Impressum'}
                   </Link>
                 </div>
 
@@ -659,10 +728,15 @@ export default async function AGBPage({
                       <div className="mt-2 grid gap-2 text-[12px] text-slate-700 sm:grid-cols-2">
                         <div>
                           {lang === 'en' ? 'Phone:' : 'Telefon:'}{' '}
-                          <span className="font-medium text-slate-900">{COMPANY.phone}</span>
+                          <a className="font-medium text-slate-900 underline underline-offset-2" href={telHref}>
+                            {COMPANY.phone}
+                          </a>
                         </div>
                         <div>
-                          E-Mail: <span className="font-medium text-slate-900">{COMPANY.email}</span>
+                          E-Mail:{' '}
+                          <a className="font-medium text-slate-900 underline underline-offset-2" href={mailHref}>
+                            {COMPANY.email}
+                          </a>
                         </div>
                       </div>
                     </div>
@@ -1041,12 +1115,12 @@ export default async function AGBPage({
                     ) : (
                       <>
                         <p>
-                          (1) Es gilt deutsches Recht unter Ausschluss des UN-Kaufrechts. Gerichtsstand für Kaufleute ist –
-                          soweit zulässig – der Sitz des Anbieters.
+                          (1) Es gilt deutsches Recht unter Ausschluss des UN-Kaufrechts. Gerichtsstand für Kaufleute ist – soweit
+                          zulässig – der Sitz des Anbieters.
                         </p>
                         <p>
-                          (2) Änderungen/Ergänzungen bedürfen der Textform (z. B. E-Mail), sofern nicht strengere Form
-                          vorgeschrieben ist.
+                          (2) Änderungen/Ergänzungen bedürfen der Textform (z. B. E-Mail), sofern nicht strengere Form vorgeschrieben
+                          ist.
                         </p>
                         <p>
                           (3) Sollten einzelne Bestimmungen unwirksam sein, bleibt der Vertrag im Übrigen wirksam; anstelle der

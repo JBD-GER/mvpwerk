@@ -1,6 +1,7 @@
 // src/app/datenschutz/page.tsx
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import React from 'react'
 
 type Lang = 'de' | 'en'
 export const dynamic = 'force-dynamic'
@@ -321,15 +322,59 @@ export async function generateMetadata({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }): Promise<Metadata> {
   const sp = await searchParams
-  const lang = normalizeLang(sp?.lang) ?? 'de'
+  const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
   const t = getT(lang)
+  const isEn = lang === 'en'
+
+  // ✅ EN: noindex, DE: index
+  const robots: Metadata['robots'] = isEn
+    ? {
+        index: false,
+        follow: true,
+        googleBot: { index: false, follow: true },
+      }
+    : {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: true,
+          follow: true,
+          'max-image-preview': 'large',
+          'max-snippet': -1,
+          'max-video-preview': -1,
+        },
+      }
 
   return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mvpwerk.de'),
     title: t.metaTitle,
     description: t.metaDescription,
-    alternates: { canonical: '/datenschutz' },
+    alternates: {
+      canonical: CANONICAL_PATH,
+      languages: {
+        'de-DE': `${CANONICAL_PATH}?lang=de`,
+        'en-US': `${CANONICAL_PATH}?lang=en`,
+      },
+    },
+    openGraph: {
+      title: t.metaTitle,
+      description: t.metaDescription,
+      url: CANONICAL_PATH,
+      type: 'website',
+      siteName: COMPANY.brand,
+      locale: isEn ? 'en_US' : 'de_DE',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t.metaTitle,
+      description: t.metaDescription,
+    },
+    robots,
   }
 }
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.mvpwerk.de'
+const CANONICAL_PATH = '/datenschutz'
 
 const TOC_DE = [
   { id: 'ueberblick', t: 'Überblick' },
@@ -391,7 +436,7 @@ export default async function DatenschutzPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const sp = await searchParams
-  const lang = normalizeLang(sp?.lang) ?? 'de'
+  const lang: Lang = normalizeLang(sp?.lang) ?? 'de'
   const t = getT(lang)
 
   const hrefWithLang = (href: string) => {
