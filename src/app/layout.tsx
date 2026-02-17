@@ -26,6 +26,12 @@ const inter = Inter({
 
 const SITE_NAME = 'MVPWERK'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://mvpwerk.de'
+const MAINTENANCE_FLAG = (
+  process.env.MAINTENANCE_MODE ??
+  process.env.NEXT_PUBLIC_MAINTENANCE_MODE ??
+  'true'
+).toLowerCase()
+const IS_MAINTENANCE_MODE = MAINTENANCE_FLAG === 'true'
 
 export const viewport: Viewport = {
   themeColor: '#0F172A',
@@ -94,21 +100,40 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="de" className={inter.variable}>
       <body className="bg-white font-sans text-slate-900">
-        <div className="min-h-screen">
-          {/* ✅ Suspense nur um Header (useSearchParams) */}
-          <Suspense fallback={null}>
-            <Header />
-          </Suspense>
+        {IS_MAINTENANCE_MODE ? (
+          <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-16">
+            <div
+              aria-hidden
+              className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(14,165,233,0.12),transparent_40%),radial-gradient(circle_at_80%_10%,rgba(15,23,42,0.12),transparent_35%),linear-gradient(to_bottom,#f8fafc,#ffffff)]"
+            />
+            <section className="relative z-10 w-full max-w-xl rounded-2xl border border-slate-200/80 bg-white/90 p-8 text-center shadow-xl backdrop-blur">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">MVPWERK</p>
+              <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900">
+                Website in Bearbeitung
+              </h1>
+              <p className="mt-4 text-base leading-relaxed text-slate-600">
+                Wir aktualisieren gerade unsere Website. Bitte schauen Sie in kurzem Abstand wieder vorbei.
+              </p>
+              <p className="mt-2 text-sm text-slate-500">We are currently updating this site. Please check back soon.</p>
+            </section>
+          </main>
+        ) : (
+          <div className="min-h-screen">
+            {/* ✅ Suspense nur um Header (useSearchParams) */}
+            <Suspense fallback={null}>
+              <Header />
+            </Suspense>
 
-          <div aria-hidden className="h-16" />
+            <div aria-hidden className="h-16" />
 
-          {children}
+            {children}
 
-          <GlobalCTA />
-          <GoogleTag />
-          <ConsentBanner />
-          <Footer />
-        </div>
+            <GlobalCTA />
+            <GoogleTag />
+            <ConsentBanner />
+            <Footer />
+          </div>
+        )}
       </body>
     </html>
   )
