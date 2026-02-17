@@ -212,7 +212,7 @@ const summary = useMemo(() => {
 
               <div className="mt-2 text-[11px] text-slate-600">
                 {t.current} <span className="font-medium text-slate-900">{summary}</span> ·{' '}
-                <Link href="/datenschutz" className="font-medium text-slate-900 underline underline-offset-2">
+                <Link href="/" className="font-medium text-slate-900 underline underline-offset-2">
                   {t.privacy}
                 </Link>
               </div>
